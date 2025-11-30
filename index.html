@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Murdo's Worldbuilder</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f6f8fb;
+      overflow: hidden;
+    }
+
+    /* === LEFT TOOLBAR AS A FULL BAR === */
+    #toolbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 155px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: linear-gradient(180deg,#ffffff 0%, #fbfdff 100%);
+      border-right: 1px solid rgba(15,23,42,0.06);
+      box-shadow: 3px 0 10px rgba(15,23,42,0.08);
+      z-index: 10;
+    }
+
+    .toolbar-section {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  align-items: flex-start;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+/* Titles and non-card controls should span both columns */
+.toolbar-section .section-title,
+.toolbar-section select,
+.toolbar-section .small-btn {
+  grid-column: 1 / -1;
+}
+
+/* Optional: make the card buttons fill their grid cell nicely */
+.toolbar-section .mode-button {
+  justify-self: start; /* or center if you prefer */
+}
+
+    .toolbar-section:last-child { border-bottom: none; }
+
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+    }
+
+    /* === BUTTONS AS CARDS === */
+    .mode-button {
+      width: 64px;
+      height: 64px;
+      border: 1px solid rgba(15,23,42,0.06);
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 6px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      text-align: center;
+      color: #7a88a6;
+      box-shadow: 0 6px 20px rgba(15,23,42,0.08);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease, color 0.15s ease;
+      white-space: normal;
+    }
+    .mode-button span.icon { font-size: 18px; margin-bottom: 2px; }
+    .mode-button.active {
+      outline: 2px solid rgba(59,130,246,0.18);
+      box-shadow: 0 10px 30px rgba(59,130,246,0.15);
+      background: #eff6ff;
+      color: #0f172a;
+    }
+    .mode-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(15,23,42,0.12);
+      background: #f9fafb;
+    }
+    .mode-button.active:hover {
+      background: #e0ecff;
+    }
+
+    select {
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      padding: 4px 8px;
+      font-size: 12px;
+      background: #f9fafb;
+      cursor: pointer;
+    }
+
+    button.small-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border-radius: 14px;
+      border: 1px solid rgba(16,185,129,0.6);
+      padding: 8px 12px;
+      font-size: 12px;
+      background: #10b981;
+      color: white;
+      box-shadow: 0 6px 18px rgba(16,185,129,0.45);
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+      white-space: nowrap;
+    }
+    button.small-btn:hover {
+      background: #059669;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(16,185,129,0.55);
+    }
+
+    /* === SIDEBAR (RIGHT) PANEL STYLE === */
+    #sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 260px;
+      height: 100vh;
+      background: linear-gradient(180deg,#ffffff 0%, #fbfdff 100%);
+      border-left: 1px solid rgba(15,23,42,0.04);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 5;
+      box-shadow: -6px 0 20px rgba(15,23,42,0.06);
+    }
+
+    #sidebar > * {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 12px;
+      box-shadow: 0 6px 20px rgba(15,23,42,0.08);
+    }
+
+    #sidebar h2 {
+      margin: 0 0 4px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    #sidebar h3 {
+      margin: 10px 0 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    #sidebar p {
+      margin: 0;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 6px;
+    }
+    .field-group label {
+      font-size: 11px;
+      color: #4b5563;
+      margin-bottom: 2px;
+    }
+    .field-group input,
+    .field-group select,
+    .field-group textarea {
+      font-size: 12px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(15,23,42,0.08);
+      background: #f9fafb;
+      outline: none;
+      box-shadow: 0 1px 2px rgba(15,23,42,0.03) inset;
+    }
+    .field-group input:focus,
+    .field-group select:focus,
+    .field-group textarea:focus {
+      border-color: #2563eb;
+      background: #ffffff;
+      box-shadow: 0 0 0 1px rgba(37,99,235,0.15);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      font-size: 11px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 50px;
+      max-height: 120px;
+    }
+
+    /* Canvas between toolbar and sidebar */
+    #canvas {
+      position: fixed;
+      top: 0;
+      left: 230px;
+      background: #ffffff;
+      z-index: 0;
+    }
+
+    .connection-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      color: #4b5563;
+    }
+    .legend-color {
+      width: 14px;
+      height: 8px;
+      border-radius: 3px;
+    }
+
+    /* =================== DARK MODE OVERRIDES =================== */
+    body.dark {
+      background: #020617;
+      color: #e5e7eb;
+    }
+
+    body.dark #toolbar {
+      background: linear-gradient(180deg,#020617 0%, #020617 100%);
+      border-right: 1px solid #111827;
+      box-shadow: 3px 0 16px rgba(0,0,0,0.7);
+    }
+    body.dark .toolbar-section {
+      border-bottom: 1px solid #111827;
+    }
+    body.dark .section-title {
+      color: #9ca3af;
+    }
+
+    body.dark .mode-button {
+      background: #020617;
+      border-color: #111827;
+      color: #9ca3af;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.8);
+    }
+    body.dark .mode-button.active {
+      background: #111827;
+      color: #e5e7eb;
+      outline-color: rgba(59,130,246,0.5);
+      box-shadow: 0 10px 30px rgba(15,23,42,0.9);
+    }
+    body.dark .mode-button:hover {
+      background: #020617;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+    }
+
+    body.dark button.small-btn {
+      background: #16a34a;
+      border-color: rgba(34,197,94,0.9);
+      box-shadow: 0 8px 22px rgba(22,163,74,0.9);
+      color: #e5e7eb;
+    }
+    body.dark button.small-btn:hover {
+      background: #22c55e;
+    }
+
+    body.dark #sidebar {
+      background: linear-gradient(180deg,#020617 0%, #020617 100%);
+      border-left: 1px solid #111827;
+      box-shadow: -6px 0 24px rgba(0,0,0,0.85);
+    }
+    body.dark #sidebar > * {
+      background: #020617;
+      border: 1px solid #111827;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.9);
+    }
+    body.dark #sidebar h2,
+    body.dark #sidebar h3 {
+      color: #e5e7eb;
+    }
+    body.dark #sidebar p,
+    body.dark .legend-item {
+      color: #9ca3af;
+    }
+
+    body.dark .field-group input,
+    body.dark .field-group select,
+    body.dark .field-group textarea {
+      background: #020617;
+      border-color: #1f2937;
+      color: #e5e7eb;
+      box-shadow: 0 0 0 1px rgba(15,23,42,0.7) inset;
+    }
+    body.dark .field-group input:focus,
+    body.dark .field-group select:focus,
+    body.dark .field-group textarea:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px rgba(59,130,246,0.7);
+      background: #020617;
+    }
+
+    body.dark #canvas {
+      background: #020617;
+    }
+    /* =================== FANTASY THEMES =================== */
+
+/* Ensure sidebar + toolbar text are definitely using the fantasy font */
+body.fantasy-light #sidebar,
+body.fantasy-dark #sidebar,
+body.fantasy-light #toolbar,
+body.fantasy-dark #toolbar {
+  font-family: "IM Fell English", "UnifrakturCook", "Old English Text MT",
+               Georgia, "Times New Roman", serif;
+}
+
+
+/* Fantasy Light: parchment look */
+body.fantasy-light {
+  background: #f3e8c8;
+  color: #3b2f2f;
+}
+
+/* Fantasy Dark: dark parchment */
+body.fantasy-dark {
+  background: #553e30;
+  color: #f5e6c4;
+}
+body.fantasy-light #toolbar {
+  background: linear-gradient(180deg, #f3e8c8 0%, #f1e0b5 100%);
+  border-right: 1px solid rgba(120, 69, 30, 0.5);
+  box-shadow: 3px 0 16px rgba(120, 69, 30, 0.5);
+}
+
+body.fantasy-light #sidebar {
+  background: linear-gradient(180deg, #f3e8c8 0%, #f1e0b5 100%);
+  border-left: 1px solid rgba(120, 69, 30, 0.4);
+  box-shadow: -6px 0 18px rgba(120, 69, 30, 0.4);
+}
+
+body.fantasy-light #sidebar > *,
+body.fantasy-light .mode-button {
+  background: #f6ecd1;
+  border-color: rgba(120, 69, 30, 0.4);
+  box-shadow: 0 6px 18px rgba(120, 69, 30, 0.35);
+  color: #3b2f2f;
+}
+
+body.fantasy-light #sidebar h2,
+body.fantasy-light #sidebar h3 {
+  color: #3b2f2f;
+}
+
+body.fantasy-light #canvas {
+  background: #f3e8c8;
+}
+
+/* inputs/fields */
+body.fantasy-light .field-group input,
+body.fantasy-light .field-group select,
+body.fantasy-light .field-group textarea {
+  background: #f6ecd1;
+  border-color: rgba(120, 69, 30, 0.4);
+  color: #3b2f2f;
+}
+body.fantasy-dark #toolbar {
+  background: linear-gradient(180deg, #1b130e 0%, #140d09 100%);
+  border-right: 1px solid #3b2413;
+  box-shadow: 3px 0 20px rgba(0, 0, 0, 0.8);
+}
+
+body.fantasy-dark #sidebar {
+  background: linear-gradient(180deg, #1b130e 0%, #140d09 100%);
+  border-left: 1px solid #3b2413;
+  box-shadow: -6px 0 22px rgba(0, 0, 0, 0.85);
+}
+
+body.fantasy-dark #sidebar > *,
+body.fantasy-dark .mode-button {
+  background: #24160f;
+  border: 1px solid #4b2c16;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.9);
+  color: #f5e6c4;
+}
+
+body.fantasy-dark #sidebar h2,
+body.fantasy-dark #sidebar h3 {
+  color: #f5e6c4;
+}
+
+body.fantasy-dark #sidebar p,
+body.fantasy-dark .legend-item {
+  color: #e5d5b4;
+}
+
+body.fantasy-dark .field-group input,
+body.fantasy-dark .field-group select,
+body.fantasy-dark .field-group textarea {
+  background: #1b130e;
+  border-color: #4b2c16;
+  color: #f5e6c4;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.7) inset;
+}
+
+body.fantasy-dark #canvas {
+  background: #1b130e;
+}
+
+  </style>
+</head>
+<body>
+
+  <!-- LEFT BAR TOOLBAR -->
+  <div id="toolbar">
+    <div class="toolbar-section">
+      <span class="section-title">Modes</span>
+      <button class="mode-button active" data-mode="move">
+        <span class="icon">🖐️</span><span>Move</span>
+      </button>
+      <button class="mode-button" data-mode="connect">
+        <span class="icon">🔗</span><span>Connect</span>
+      </button>
+      <button class="mode-button" data-mode="edit">
+        <span class="icon">✏️</span><span>Edit</span>
+      </button>
+      <button class="mode-button" data-mode="delete">
+        <span class="icon">🗑️</span><span>Delete</span>
+      </button>
+    </div>
+
+    <div class="toolbar-section">
+      <span class="section-title">Node Manager</span>
+      <select id="nodeTypeSelect">
+        <option value="character">Character</option>
+        <option value="location">Location</option>
+        <option value="note">Note</option>
+      </select>
+      <button id="newNodeButton" class="small-btn">
+        <span>➕</span><span>Node</span>
+      </button>
+    </div>
+
+    <div class="toolbar-section">
+      <span class="section-title">Connection Type</span>
+      <select id="connectionTypeSelect">
+        <option value="friends">Friends</option>
+        <option value="family">Family</option>
+        <option value="romantic">Romantic</option>
+        <option value="enemy">Enemy</option>
+        <option value="neutral">Neutral</option>
+        <option value="traitor">Traitor</option>
+        <option value="ex">Ex-relationship</option>
+        <option value="parent">Parent/Caretaker</option>
+        <option value="coworker">Coworkers</option>
+      </select>
+    </div>
+
+    <div class="toolbar-section">
+      <span class="section-title">Local Save</span>
+      <button id="saveButton" class="mode-button">
+        <span class="icon">💾</span><span>Save</span>
+      </button>
+      <button id="loadButton" class="mode-button">
+        <span class="icon">📂</span><span>Load</span>
+      </button>
+      <button id="clearButton" class="mode-button">
+        <span class="icon">🧹</span><span>Clear</span>
+      </button>
+    </div>
+
+    <div class="toolbar-section">
+      <span class="section-title">Saves</span>
+      <button id="saveJsonButton" class="mode-button">
+        <span class="icon">⬇️</span><span>Save JSON</span>
+      </button>
+      <button id="loadJsonButton" class="mode-button">
+        <span class="icon">⬆️</span><span>Load JSON</span>
+      </button>
+    </div>
+
+    <div class="toolbar-section">
+      <span class="section-title">Theme</span>
+      <button id="themeToggle" class="mode-button">
+        <span class="icon">🌙</span><span>Dark</span>
+      </button>
+    </div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+  <input type="file" id="jsonFileInput" accept="application/json" style="display:none" />
+
+  <!-- RIGHT SIDEBAR -->
+  <div id="sidebar">
+    <div>
+      <h2>No node selected</h2>
+      <p>Switch to <strong>Edit ✏️</strong> mode and click a node to see its details here.</p>
+      <h3>Connection Types</h3>
+      <div class="connection-legend">
+        <div class="legend-item"><span class="legend-color" style="background:#2196f3;"></span>friends</div>
+        <div class="legend-item"><span class="legend-color" style="background:#ffd335;"></span>family</div>
+        <div class="legend-item"><span class="legend-color" style="background:#e68de0;"></span>romantic</div>
+        <div class="legend-item"><span class="legend-color" style="background:#f44336;"></span>enemy</div>
+        <div class="legend-item"><span class="legend-color" style="background:#bdbdbd;"></span>neutral</div>
+        <div class="legend-item"><span class="legend-color" style="background:#000000;"></span>traitor</div>
+        <div class="legend-item"><span class="legend-color" style="background:#8b5cf6;"></span>ex-relationship</div>
+        <div class="legend-item"><span class="legend-color" style="background:#ffeb3b;"></span>parent/caretaker</div>
+        <div class="legend-item"><span class="legend-color" style="background:#4caf50;"></span>coworkers</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const sidebar = document.getElementById("sidebar");
+    const toolbarEl = document.getElementById("toolbar");
+
+    // ---- Theme state ----
+const THEMES = ["light", "dark", "fantasyLight", "fantasyDark"];
+let currentThemeIndex = 0;      // 0 = Light
+let darkMode = false;           // used by drawing code (light vs dark backgrounds)
+
+function getCurrentTheme() {
+  return THEMES[currentThemeIndex];
+}
+    // ---- Pan & zoom ----
+    let panX = 0;
+    let panY = 0;
+    let scale = 1;
+    const MIN_SCALE = 0.3;
+    const MAX_SCALE = 2.5;
+
+    function resizeCanvas() {
+      const sidebarWidth = sidebar.offsetWidth || 260;
+      const toolbarWidth = toolbarEl.offsetWidth || 230;
+      canvas.style.left = toolbarWidth + "px";
+      canvas.width = window.innerWidth - sidebarWidth - toolbarWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    function screenToWorld(x, y) {
+      return {
+        x: (x - panX) / scale,
+        y: (y - panY) / scale,
+      };
+    }
+
+    // ---- State ----
+    let nodes = [];
+    let edges = [];
+    let nextNodeId = 1;
+
+    const MODES = {
+      MOVE: "move",
+      CONNECT: "connect",
+      EDIT: "edit",
+      DELETE: "delete",
+    };
+    let currentMode = MODES.MOVE;
+
+    const edgeColors = {
+      friends: "#2196f3",
+      family: "#ffd335",
+      romantic: "#e68de0",
+      enemy: "#f44336",
+      neutral: "#bdbdbd",
+      traitor: "#000000",
+      ex: "#8b5cf6",
+      parent: "#ffeb3b",
+      coworker: "#4caf50",
+    };
+
+    const BUBBLE_RADIUS = 180;
+    const BUBBLE_FORCE = 20;
+    const SPRING_LENGTH = 190;
+    const SPRING_STRENGTH = 0.06;
+    const DAMPING = 0.95;
+
+    let draggingNode = null;
+    let dragTarget = { x: 0, y: 0 };
+    let isPanning = false;
+    let lastPanScreen = { x: 0, y: 0 };
+
+    let selectedNode = null;
+    let connectSourceNode = null;
+
+    const NODE_WIDTH = 140;
+    const NODE_HEIGHT = 70;
+    const NODE_RADIUS = 14;
+
+    function getNodeAtWorld(x, y) {
+      for (let n of nodes) {
+        if (
+          x >= n.x - NODE_WIDTH / 2 &&
+          x <= n.x + NODE_WIDTH / 2 &&
+          y >= n.y - NODE_HEIGHT / 2 &&
+          y <= n.y + NODE_HEIGHT / 2
+        ) {
+          return n;
+        }
+      }
+      return null;
+    }
+
+    function getNodeById(id) {
+      return nodes.find(n => n.id === id) || null;
+    }
+
+    function buildEdgeGroups() {
+      const groups = {};
+      edges.forEach((e, index) => {
+        const a = e.fromId;
+        const b = e.toId;
+        const key = a < b ? a + "-" + b : b + "-" + a;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(index);
+      });
+      return groups;
+    }
+
+    function normalizeEdges() {
+      const byKey = {};
+      for (const e of edges) {
+        const baseKey =
+          e.type + ":" + (e.fromId < e.toId ? e.fromId + "-" + e.toId : e.toId + "-" + e.fromId);
+
+        const dir = e.direction || "forward";
+        if (!byKey[baseKey]) {
+          byKey[baseKey] = {
+            fromId: e.fromId,
+            toId: e.toId,
+            type: e.type,
+            direction: dir,
+          };
+        } else {
+          const ex = byKey[baseKey];
+          if (ex.direction === "both" || dir === "both") {
+            ex.direction = "both";
+          } else if (ex.fromId !== e.fromId) {
+            ex.direction = "both";
+          }
+        }
+      }
+      edges = Object.values(byKey);
+    }
+
+    function getEdgeAtWorld(x, y) {
+      const thresholdWorld = 6 / scale;
+      const groups = buildEdgeGroups();
+
+      let closestIndex = -1;
+      let closestDist = Infinity;
+
+      for (const key in groups) {
+        const indices = groups[key];
+        const groupSize = indices.length;
+        const centerIndex = (groupSize - 1) / 2;
+
+        for (let gi = 0; gi < indices.length; gi++) {
+          const i = indices[gi];
+          const e = edges[i];
+          const a = getNodeById(e.fromId);
+          const b = getNodeById(e.toId);
+          if (!a || !b) continue;
+
+          let ax = a.x;
+          let ay = a.y;
+          let bx = b.x;
+          let by = b.y;
+
+          let dx = bx - ax;
+          let dy = by - ay;
+          let length = Math.hypot(dx, dy);
+          if (!length) continue;
+          dx /= length;
+          dy /= length;
+
+          const perpX = -dy;
+          const perpY = dx;
+
+          const offsetIndex = gi - centerIndex;
+          const offsetWorld = (14 / scale) * offsetIndex;
+          const offX = perpX * offsetWorld;
+          const offY = perpY * offsetWorld;
+
+          ax += offX;
+          ay += offY;
+          bx += offX;
+          by += offY;
+
+          const vx = bx - ax;
+          const vy = by - ay;
+          const lengthSq2 = vx * vx + vy * vy;
+          if (lengthSq2 === 0) continue;
+
+          const t = Math.max(
+            0,
+            Math.min(1, ((x - ax) * vx + (y - ay) * vy) / lengthSq2)
+          );
+          const projX = ax + t * vx;
+          const projY = ay + t * vy;
+          const dist = Math.hypot(x - projX, y - projY);
+
+          if (dist < thresholdWorld && dist < closestDist) {
+            closestDist = dist;
+            closestIndex = i;
+          }
+        }
+      }
+
+      return closestIndex;
+    }
+
+    function nodeDisplayLabel(node) {
+      if (node.type === "character") return node.data.name || "Character";
+      if (node.type === "location") return node.data.name || "Location";
+      if (node.type === "note") return node.data.title || "Note";
+      return "Node";
+    }
+
+    function createNode(type, x, y) {
+      let data = {};
+      if (type === "character") {
+        data = {
+          name: "New Character",
+          age: "",
+          dob: "",
+          species: "",
+          height: "",
+          weight: "",
+          gender: "",
+        };
+      } else if (type === "location") {
+        data = {
+          name: "New Location",
+          category: "town",
+        };
+      } else {
+        data = {
+          title: "New Note",
+          content: "",
+        };
+      }
+      const node = {
+        id: nextNodeId++,
+        type,
+        data,
+        x,
+        y,
+        vx: 0,
+        vy: 0,
+      };
+      nodes.push(node);
+      return node;
+    }
+
+    function drawGrid() {
+      const gridSize = 70;
+      const left = (0 - panX) / scale;
+      const right = (canvas.width - panX) / scale;
+      const top = (0 - panY) / scale;
+      const bottom = (canvas.height - panY) / scale;
+
+      const startX = Math.floor(left / gridSize) * gridSize;
+      const endX = Math.ceil(right / gridSize) * gridSize;
+      const startY = Math.floor(top / gridSize) * gridSize;
+      const endY = Math.ceil(bottom / gridSize) * gridSize;
+
+      ctx.fillStyle = darkMode ? "#1f2937" : "#e5e7eb";
+      const dotRadiusWorld = 1.5 / scale;
+      for (let x = startX; x <= endX; x += gridSize) {
+        for (let y = startY; y <= endY; y += gridSize) {
+          ctx.beginPath();
+          ctx.arc(x, y, dotRadiusWorld, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    function drawRoundedNode(n) {
+      const w = NODE_WIDTH;
+      const h = NODE_HEIGHT;
+      const r = NODE_RADIUS;
+      const x = n.x - w / 2;
+      const y = n.y - h / 2;
+
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+
+      let fill = darkMode ? "#020617" : "#ffffff";
+      if (n === selectedNode) fill = darkMode ? "#0f172a" : "#dbeafe";
+      if (n === connectSourceNode) fill = darkMode ? "#172554" : "#fee2e2";
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.strokeStyle = darkMode ? "#e5e7eb" : "#111827";
+      ctx.lineWidth = 1.2 / scale;
+      ctx.stroke();
+
+      ctx.fillStyle = darkMode ? "#f9fafb" : "#111827";
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+
+const theme = getCurrentTheme();
+let labelFontFamily = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+
+if (theme === "fantasyLight" || theme === "fantasyDark") {
+  labelFontFamily = "\"IM Fell English\", \"UnifrakturCook\", \"Old English Text MT\", Georgia, \"Times New Roman\", serif";
+}
+
+ctx.font = `${13 / scale}px ${labelFontFamily}`;
+const label = nodeDisplayLabel(n);
+ctx.fillText(label, n.x, n.y);
+
+    }
+
+    function drawEdges() {
+      const groups = buildEdgeGroups();
+      ctx.lineWidth = 2 / scale;
+
+      for (const key in groups) {
+        const indices = groups[key];
+        const groupSize = indices.length;
+        const centerIndex = (groupSize - 1) / 2;
+
+        for (let gi = 0; gi < indices.length; gi++) {
+          const i = indices[gi];
+          const e = edges[i];
+          const a = getNodeById(e.fromId);
+          const b = getNodeById(e.toId);
+          if (!a || !b) continue;
+
+          let ax = a.x;
+          let ay = a.y;
+          let bx = b.x;
+          let by = b.y;
+
+          let dx = bx - ax;
+          let dy = by - ay;
+          let dist = Math.hypot(dx, dy) || 1;
+          dx /= dist;
+          dy /= dist;
+
+          const perpX = -dy;
+          const perpY = dx;
+
+          const offsetIndex = gi - centerIndex;
+          const offsetWorld = (14 / scale) * offsetIndex;
+          const offX = perpX * offsetWorld;
+          const offY = perpY * offsetWorld;
+
+          ax += offX;
+          ay += offY;
+          bx += offX;
+          by += offY;
+
+          const color = edgeColors[e.type] || "#4b5563";
+          ctx.strokeStyle = color;
+
+          ctx.beginPath();
+          ctx.moveTo(ax, ay);
+          ctx.lineTo(bx, by);
+          ctx.stroke();
+
+          const mx = (ax + bx) / 2;
+          const my = (ay + by) / 2;
+
+          if (e.direction === "both") {
+            const radius = 5 / scale;
+            ctx.beginPath();
+            ctx.arc(mx, my, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+          } else {
+            const arrowSize = 7 / scale;
+            const tipX = mx + dx * arrowSize;
+            const tipY = my + dy * arrowSize;
+
+            const backX = mx - dx * arrowSize;
+            const backY = my - dy * arrowSize;
+
+            const leftX = backX + (-dy) * arrowSize * 0.6;
+            const leftY = backY + (dx) * arrowSize * 0.6;
+
+            const rightX = backX + (dy) * arrowSize * 0.6;
+            const rightY = backY + (-dx) * arrowSize * 0.6;
+
+            ctx.beginPath();
+            ctx.moveTo(tipX, tipY);
+            ctx.lineTo(leftX, leftY);
+            ctx.lineTo(rightX, rightY);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+          }
+        }
+      }
+    }
+
+    function draw() {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      function draw() {
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const theme = getCurrentTheme();
+  let bgColor;
+
+  if (theme === "fantasyLight") {
+    bgColor = "#f3e8c8";        // parchment
+  } else if (theme === "fantasyDark") {
+    bgColor = "#1b130e";        // dark parchment
+  } else {
+    bgColor = darkMode ? "#020617" : "#ffffff";
+  }
+
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.setTransform(scale, 0, 0, scale, panX, panY);
+
+  drawGrid();
+  drawEdges();
+  nodes.forEach(n => drawRoundedNode(n));
+}
+
+
+      ctx.setTransform(scale, 0, 0, scale, panX, panY);
+
+      drawGrid();
+      drawEdges();
+      nodes.forEach(n => drawRoundedNode(n));
+    }
+
+    function physics() {
+      for (let n of nodes) {
+        if (typeof n.vx !== "number") n.vx = 0;
+        if (typeof n.vy !== "number") n.vy = 0;
+      }
+
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const a = nodes[i];
+          const b = nodes[j];
+          let dx = b.x - a.x;
+          let dy = b.y - a.y;
+          let dist = Math.hypot(dx, dy) || 0.001;
+
+          if (dist >= BUBBLE_RADIUS) continue;
+
+          const overlap = BUBBLE_RADIUS - dist;
+          const force = (overlap / BUBBLE_RADIUS) * BUBBLE_FORCE;
+
+          dx /= dist;
+          dy /= dist;
+
+          const fx = dx * force;
+          const fy = dy * force;
+
+          a.vx -= fx;
+          a.vy -= fy;
+          b.vx += fx;
+          b.vy += fy;
+        }
+      }
+
+      const springPairs = {};
+      edges.forEach(e => {
+        const key =
+          e.fromId < e.toId
+            ? e.fromId + "-" + e.toId
+            : e.toId + "-" + e.fromId;
+        springPairs[key] = { fromId: e.fromId, toId: e.toId };
+      });
+
+      for (const key in springPairs) {
+        const e = springPairs[key];
+        const a = getNodeById(e.fromId);
+        const b = getNodeById(e.toId);
+        if (!a || !b) continue;
+
+        let dx = b.x - a.x;
+        let dy = b.y - a.y;
+        let dist = Math.hypot(dx, dy) || 0.001;
+        const diff = dist - SPRING_LENGTH;
+        const force = SPRING_STRENGTH * diff;
+
+        dx /= dist;
+        dy /= dist;
+
+        const fx = dx * force;
+        const fy = dy * force;
+
+        a.vx += fx;
+        a.vy += fy;
+        b.vx -= fx;
+        b.vy -= fy;
+      }
+
+      for (let n of nodes) {
+        if (draggingNode === n && currentMode === MODES.MOVE) {
+          n.x += (dragTarget.x - n.x) * 0.25;
+          n.y += (dragTarget.y - n.y) * 0.25;
+          n.vx = 0;
+          n.vy = 0;
+        } else {
+          n.x += n.vx * 0.08;
+          n.y += n.vy * 0.08;
+        }
+
+        n.vx *= DAMPING;
+        n.vy *= DAMPING;
+      }
+
+      draw();
+      requestAnimationFrame(physics);
+    }
+
+    function renderSidebar() {
+      if (!selectedNode) {
+        sidebar.innerHTML = `
+          <div>
+            <h2>No node selected</h2>
+            <p>Switch to <strong>Edit ✏️</strong> mode and click a node to see its details here.</p>
+            <h3>Connection Types</h3>
+            <div class="connection-legend">
+              <div class="legend-item"><span class="legend-color" style="background:#2196f3;"></span>friends</div>
+              <div class="legend-item"><span class="legend-color" style="background:#ffd335;"></span>family</div>
+              <div class="legend-item"><span class="legend-color" style="background:#e68de0;"></span>romantic</div>
+              <div class="legend-item"><span class="legend-color" style="background:#f44336;"></span>enemy</div>
+              <div class="legend-item"><span class="legend-color" style="background:#bdbdbd;"></span>neutral</div>
+              <div class="legend-item"><span class="legend-color" style="background:#000000;"></span>traitor</div>
+              <div class="legend-item"><span class="legend-color" style="background:#8b5cf6;"></span>ex-relationship</div>
+              <div class="legend-item"><span class="legend-color" style="background:#ffeb3b;"></span>parent/caretaker</div>
+              <div class="legend-item"><span class="legend-color" style="background:#4caf50;"></span>coworkers</div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (selectedNode.type === "character") {
+        sidebar.innerHTML = `
+          <div>
+            <div class="pill">Character</div>
+            <h2>${selectedNode.data.name || "Character"}</h2>
+
+            <div class="field-group">
+              <label for="char-name">Name</label>
+              <input id="char-name" value="${selectedNode.data.name || ""}">
+            </div>
+            <div class="field-group">
+              <label for="char-age">Age</label>
+              <input id="char-age" value="${selectedNode.data.age || ""}">
+            </div>
+            <div class="field-group">
+              <label for="char-dob">Date of Birth</label>
+              <input id="char-dob" value="${selectedNode.data.dob || ""}">
+            </div>
+            <div class="field-group">
+              <label for="char-species">Species</label>
+              <input id="char-species" value="${selectedNode.data.species || ""}">
+            </div>
+            <div class="field-group">
+              <label for="char-height">Height</label>
+              <input id="char-height" value="${selectedNode.data.height || ""}">
+            </div>
+            <div class="field-group">
+              <label for="char-weight">Weight</label>
+              <input id="char-weight" value="${selectedNode.data.weight || ""}">
+            </div>
+            <div class="field-group">
+              <label for="char-gender">Gender</label>
+              <input id="char-gender" value="${selectedNode.data.gender || ""}">
+            </div>
+          </div>
+        `;
+
+        document.getElementById("char-name").addEventListener("input", e => {
+          selectedNode.data.name = e.target.value;
+        });
+        document.getElementById("char-age").addEventListener("input", e => {
+          selectedNode.data.age = e.target.value;
+        });
+        document.getElementById("char-dob").addEventListener("input", e => {
+          selectedNode.data.dob = e.target.value;
+        });
+        document.getElementById("char-species").addEventListener("input", e => {
+          selectedNode.data.species = e.target.value;
+        });
+        document.getElementById("char-height").addEventListener("input", e => {
+          selectedNode.data.height = e.target.value;
+        });
+        document.getElementById("char-weight").addEventListener("input", e => {
+          selectedNode.data.weight = e.target.value;
+        });
+        document.getElementById("char-gender").addEventListener("input", e => {
+          selectedNode.data.gender = e.target.value;
+        });
+      } else if (selectedNode.type === "location") {
+        sidebar.innerHTML = `
+          <div>
+            <div class="pill">Location</div>
+            <h2>${selectedNode.data.name || "Location"}</h2>
+
+            <div class="field-group">
+              <label for="loc-name">Name</label>
+              <input id="loc-name" value="${selectedNode.data.name || ""}">
+            </div>
+            <div class="field-group">
+              <label for="loc-category">Category</label>
+              <select id="loc-category">
+                <option value="town"${selectedNode.data.category === "town" ? " selected" : ""}>Town</option>
+                <option value="city"${selectedNode.data.category === "city" ? " selected" : ""}>City</option>
+                <option value="nature"${selectedNode.data.category === "nature" ? " selected" : ""}>Nature</option>
+                <option value="forest"${selectedNode.data.category === "forest" ? " selected" : ""}>Forest</option>
+                <option value="other"${selectedNode.data.category === "other" ? " selected" : ""}>Other</option>
+              </select>
+            </div>
+          </div>
+        `;
+
+        document.getElementById("loc-name").addEventListener("input", e => {
+          selectedNode.data.name = e.target.value;
+        });
+        document.getElementById("loc-category").addEventListener("change", e => {
+          selectedNode.data.category = e.target.value;
+        });
+      } else {
+        sidebar.innerHTML = `
+          <div>
+            <div class="pill">Note</div>
+            <h2>${selectedNode.data.title || "Note"}</h2>
+
+            <div class="field-group">
+              <label for="note-title">Title</label>
+              <input id="note-title" value="${selectedNode.data.title || ""}">
+            </div>
+            <div class="field-group">
+              <label for="note-content">Content</label>
+              <textarea id="note-content">${selectedNode.data.content || ""}</textarea>
+            </div>
+          </div>
+        `;
+
+        document.getElementById("note-title").addEventListener("input", e => {
+          selectedNode.data.title = e.target.value;
+        });
+        document.getElementById("note-content").addEventListener("input", e => {
+          selectedNode.data.content = e.target.value;
+        });
+      }
+    }
+
+    const modeButtons = document.querySelectorAll(".mode-button[data-mode]");
+    modeButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        modeButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentMode = btn.getAttribute("data-mode");
+        if (currentMode !== MODES.CONNECT) {
+          connectSourceNode = null;
+        }
+        if (currentMode !== MODES.EDIT) {
+          selectedNode = null;
+          renderSidebar();
+        }
+      });
+    });
+
+    // Theme toggle (4 modes)
+const themeToggle = document.getElementById("themeToggle");
+
+function applyTheme() {
+  const theme = getCurrentTheme();
+
+  // Remove all theme classes first
+  document.body.classList.remove("dark", "fantasy-light", "fantasy-dark");
+
+  // Base: Light
+  darkMode = false;
+
+  if (theme === "dark") {
+    document.body.classList.add("dark");
+    darkMode = true;
+  } else if (theme === "fantasyLight") {
+    document.body.classList.add("fantasy-light");
+    darkMode = false; // parchment but still "light"
+  } else if (theme === "fantasyDark") {
+    document.body.classList.add("fantasy-dark");
+    darkMode = true; // dark parchment
+  }
+
+  // Update button icon/label (shows what's *next*)
+  const iconSpan = themeToggle.querySelector(".icon");
+  const labelSpan = themeToggle.querySelector("span:last-child");
+
+  if (theme === "dark") {
+    if (iconSpan) iconSpan.textContent = "🌙";
+    if (labelSpan) labelSpan.textContent = "Dark";
+  } else if (theme === "fantasyLight") {
+    if (iconSpan) iconSpan.textContent = "📜";
+    if (labelSpan) labelSpan.textContent = "Fantasy Light";
+  } else if (theme === "fantasyDark") {
+    if (iconSpan) iconSpan.textContent = "🌑";
+    if (labelSpan) labelSpan.textContent = "Fantasy Dark";
+  } else if (theme === "light") {
+    if (iconSpan) iconSpan.textContent = "☀️";
+    if (labelSpan) labelSpan.textContent = "Light";
+  }
+
+  draw(); // refresh canvas colors
+}
+
+themeToggle.addEventListener("click", () => {
+  currentThemeIndex = (currentThemeIndex + 1) % THEMES.length;
+  applyTheme();
+});
+
+// Set initial theme on load
+applyTheme();
+
+
+    // toolbar actions
+    document.getElementById("newNodeButton").addEventListener("click", () => {
+      const cx = (canvas.width / 2 - panX) / scale;
+      const cy = (canvas.height / 2 - panY) / scale;
+      const type = document.getElementById("nodeTypeSelect").value;
+      const node = createNode(
+        type,
+        cx + (Math.random() * 200 - 100) / scale,
+        cy + (Math.random() * 200 - 100) / scale
+      );
+      if (currentMode === MODES.EDIT) {
+        selectedNode = node;
+        renderSidebar();
+      }
+    });
+
+    document.getElementById("saveButton").addEventListener("click", () => {
+      normalizeEdges();
+      localStorage.setItem("nb_nodes", JSON.stringify(nodes));
+      localStorage.setItem("nb_edges", JSON.stringify(edges));
+      alert("Saved graph to your browser storage.");
+    });
+
+    document.getElementById("loadButton").addEventListener("click", () => {
+      const savedNodes = localStorage.getItem("nb_nodes");
+      const savedEdges = localStorage.getItem("nb_edges");
+      if (!savedNodes || !savedEdges) {
+        alert("No saved graph found.");
+        return;
+      }
+      nodes = JSON.parse(savedNodes);
+      edges = JSON.parse(savedEdges);
+
+      edges.forEach(e => {
+        if (!e.direction) e.direction = "forward";
+      });
+      normalizeEdges();
+
+      nodes.forEach(n => {
+        if (typeof n.vx !== "number") n.vx = 0;
+        if (typeof n.vy !== "number") n.vy = 0;
+      });
+      nextNodeId = nodes.reduce((max, n) => Math.max(max, n.id), 0) + 1;
+      selectedNode = null;
+      connectSourceNode = null;
+      renderSidebar();
+    });
+
+    document.getElementById("clearButton").addEventListener("click", () => {
+      if (!confirm("Clear all nodes and connections?")) return;
+      nodes = [];
+      edges = [];
+      selectedNode = null;
+      connectSourceNode = null;
+      renderSidebar();
+    });
+
+    // JSON save/load
+    const saveJsonButton = document.getElementById("saveJsonButton");
+    const loadJsonButton = document.getElementById("loadJsonButton");
+    const jsonFileInput = document.getElementById("jsonFileInput");
+
+    saveJsonButton.addEventListener("click", () => {
+      normalizeEdges();
+      const data = JSON.stringify({ nodes, edges }, null, 2);
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "worldbuilder-graph.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    loadJsonButton.addEventListener("click", () => {
+      jsonFileInput.value = "";
+      jsonFileInput.click();
+    });
+
+    jsonFileInput.addEventListener("change", () => {
+      const file = jsonFileInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!data || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
+            alert("JSON format not recognised. Expected { nodes: [...], edges: [...] }.");
+            return;
+          }
+          nodes = data.nodes;
+          edges = data.edges;
+          edges.forEach(e => {
+            if (!e.direction) e.direction = "forward";
+          });
+          normalizeEdges();
+          nodes.forEach(n => {
+            if (typeof n.vx !== "number") n.vx = 0;
+            if (typeof n.vy !== "number") n.vy = 0;
+          });
+          nextNodeId = nodes.reduce((max, n) => Math.max(max, n.id), 0) + 1;
+          selectedNode = null;
+          connectSourceNode = null;
+          renderSidebar();
+          alert("JSON loaded successfully.");
+        } catch (err) {
+          console.error(err);
+          alert("Failed to parse JSON file.");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    // canvas interaction
+    canvas.addEventListener("mousedown", e => {
+      const rect = canvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+      const world = screenToWorld(sx, sy);
+
+      const node = getNodeAtWorld(world.x, world.y);
+
+      if (currentMode === MODES.MOVE) {
+        if (node) {
+          draggingNode = node;
+          dragTarget = { x: world.x, y: world.y };
+        } else {
+          isPanning = true;
+          lastPanScreen = { x: sx, y: sy };
+        }
+      } else if (currentMode === MODES.CONNECT) {
+        if (node) {
+          if (!connectSourceNode) {
+            connectSourceNode = node;
+          } else if (connectSourceNode && connectSourceNode !== node) {
+            const type = document.getElementById("connectionTypeSelect").value;
+            const src = connectSourceNode.id;
+            const dst = node.id;
+
+            const sameTypeEdges = edges.filter(
+              e =>
+                e.type === type &&
+                ((e.fromId === src && e.toId === dst) ||
+                  (e.fromId === dst && e.toId === src))
+            );
+
+            if (sameTypeEdges.length === 0) {
+              edges.push({
+                fromId: src,
+                toId: dst,
+                type,
+                direction: "forward",
+              });
+            } else {
+              const e0 = sameTypeEdges[0];
+              if (e0.direction !== "both" && e0.fromId !== src) {
+                e0.direction = "both";
+              }
+            }
+
+            normalizeEdges();
+            connectSourceNode = null;
+          }
+        } else {
+          connectSourceNode = null;
+        }
+      } else if (currentMode === MODES.EDIT) {
+        if (node) {
+          selectedNode = node;
+        } else {
+          selectedNode = null;
+        }
+        renderSidebar();
+      } else if (currentMode === MODES.DELETE) {
+        const edgeIndex = getEdgeAtWorld(world.x, world.y);
+        if (edgeIndex !== -1) {
+          edges.splice(edgeIndex, 1);
+          return;
+        }
+        if (node) {
+          const id = node.id;
+          nodes = nodes.filter(n => n.id !== id);
+          edges = edges.filter(e => e.fromId !== id && e.toId !== id);
+          if (selectedNode && selectedNode.id === id) {
+            selectedNode = null;
+            renderSidebar();
+          }
+        }
+      }
+    });
+
+    canvas.addEventListener("mousemove", e => {
+      const rect = canvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+
+      if (currentMode === MODES.MOVE) {
+        if (draggingNode) {
+          const world = screenToWorld(sx, sy);
+          dragTarget = { x: world.x, y: world.y };
+        } else if (isPanning) {
+          const dx = sx - lastPanScreen.x;
+          const dy = sy - lastPanScreen.y;
+          panX += dx;
+          panY += dy;
+          lastPanScreen = { x: sx, y: sy };
+        }
+      }
+    });
+
+    canvas.addEventListener("mouseup", () => {
+      draggingNode = null;
+      isPanning = false;
+    });
+
+    canvas.addEventListener("mouseleave", () => {
+      draggingNode = null;
+      isPanning = false;
+    });
+
+    canvas.addEventListener("wheel", e => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+
+      const worldBeforeZoom = screenToWorld(sx, sy);
+
+      const delta = -e.deltaY;
+      const zoomFactor = delta > 0 ? 1.1 : 0.9;
+      const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale * zoomFactor));
+      scale = newScale;
+
+      panX = sx - worldBeforeZoom.x * scale;
+      panY = sy - worldBeforeZoom.y * scale;
+    }, { passive: false });
+
+    renderSidebar();
+    physics();
+  </script>
+</body>
+</html>
