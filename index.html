@@ -30,24 +30,24 @@
     }
 
     .toolbar-section {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  align-items: flex-start;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e5e7eb;
-}
-/* Titles and non-card controls should span both columns */
-.toolbar-section .section-title,
-.toolbar-section select,
-.toolbar-section .small-btn {
-  grid-column: 1 / -1;
-}
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+      align-items: flex-start;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    /* Titles and non-card controls should span both columns */
+    .toolbar-section .section-title,
+    .toolbar-section select,
+    .toolbar-section .small-btn {
+      grid-column: 1 / -1;
+    }
 
-/* Optional: make the card buttons fill their grid cell nicely */
-.toolbar-section .mode-button {
-  justify-self: start; /* or center if you prefer */
-}
+    /* Optional: make the card buttons fill their grid cell nicely */
+    .toolbar-section .mode-button {
+      justify-self: start; /* or center if you prefer */
+    }
 
     .toolbar-section:last-child { border-bottom: none; }
 
@@ -328,110 +328,236 @@
     body.dark #canvas {
       background: #020617;
     }
+
     /* =================== FANTASY THEMES =================== */
 
-/* Ensure sidebar + toolbar text are definitely using the fantasy font */
-body.fantasy-light #sidebar,
-body.fantasy-dark #sidebar,
-body.fantasy-light #toolbar,
-body.fantasy-dark #toolbar {
-  font-family: "IM Fell English", "UnifrakturCook", "Old English Text MT",
-               Georgia, "Times New Roman", serif;
-}
+    /* Ensure sidebar + toolbar text are definitely using the fantasy font */
+    body.fantasy-light #sidebar,
+    body.fantasy-dark #sidebar,
+    body.fantasy-light #toolbar,
+    body.fantasy-dark #toolbar {
+      font-family: "IM Fell English", "UnifrakturCook", "Old English Text MT",
+                   Georgia, "Times New Roman", serif;
+    }
 
+    /* Fantasy Light: parchment look */
+    body.fantasy-light {
+      background: #f3e8c8;
+      color: #3b2f2f;
+    }
 
-/* Fantasy Light: parchment look */
-body.fantasy-light {
-  background: #f3e8c8;
-  color: #3b2f2f;
-}
+    /* Fantasy Dark: dark parchment */
+    body.fantasy-dark {
+      background: #553e30;
+      color: #f5e6c4;
+    }
+    body.fantasy-light #toolbar {
+      background: linear-gradient(180deg, #f3e8c8 0%, #f1e0b5 100%);
+      border-right: 1px solid rgba(120, 69, 30, 0.5);
+      box-shadow: 3px 0 16px rgba(120, 69, 30, 0.5);
+    }
 
-/* Fantasy Dark: dark parchment */
-body.fantasy-dark {
-  background: #553e30;
-  color: #f5e6c4;
-}
-body.fantasy-light #toolbar {
-  background: linear-gradient(180deg, #f3e8c8 0%, #f1e0b5 100%);
-  border-right: 1px solid rgba(120, 69, 30, 0.5);
-  box-shadow: 3px 0 16px rgba(120, 69, 30, 0.5);
-}
+    body.fantasy-light #sidebar {
+      background: linear-gradient(180deg, #f3e8c8 0%, #f1e0b5 100%);
+      border-left: 1px solid rgba(120, 69, 30, 0.4);
+      box-shadow: -6px 0 18px rgba(120, 69, 30, 0.4);
+    }
 
-body.fantasy-light #sidebar {
-  background: linear-gradient(180deg, #f3e8c8 0%, #f1e0b5 100%);
-  border-left: 1px solid rgba(120, 69, 30, 0.4);
-  box-shadow: -6px 0 18px rgba(120, 69, 30, 0.4);
-}
+    body.fantasy-light #sidebar > *,
+    body.fantasy-light .mode-button {
+      background: #f6ecd1;
+      border-color: rgba(120, 69, 30, 0.4);
+      box-shadow: 0 6px 18px rgba(120, 69, 30, 0.35);
+      color: #3b2f2f;
+    }
 
-body.fantasy-light #sidebar > *,
-body.fantasy-light .mode-button {
-  background: #f6ecd1;
-  border-color: rgba(120, 69, 30, 0.4);
-  box-shadow: 0 6px 18px rgba(120, 69, 30, 0.35);
-  color: #3b2f2f;
-}
+    body.fantasy-light #sidebar h2,
+    body.fantasy-light #sidebar h3 {
+      color: #3b2f2f;
+    }
 
-body.fantasy-light #sidebar h2,
-body.fantasy-light #sidebar h3 {
-  color: #3b2f2f;
-}
+    body.fantasy-light #canvas {
+      background: #f3e8c8;
+    }
 
-body.fantasy-light #canvas {
-  background: #f3e8c8;
-}
+    /* inputs/fields */
+    body.fantasy-light .field-group input,
+    body.fantasy-light .field-group select,
+    body.fantasy-light .field-group textarea {
+      background: #f6ecd1;
+      border-color: rgba(120, 69, 30, 0.4);
+      color: #3b2f2f;
+    }
+    body.fantasy-dark #toolbar {
+      background: linear-gradient(180deg, #1b130e 0%, #140d09 100%);
+      border-right: 1px solid #3b2413;
+      box-shadow: 3px 0 20px rgba(0, 0, 0, 0.8);
+    }
 
-/* inputs/fields */
-body.fantasy-light .field-group input,
-body.fantasy-light .field-group select,
-body.fantasy-light .field-group textarea {
-  background: #f6ecd1;
-  border-color: rgba(120, 69, 30, 0.4);
-  color: #3b2f2f;
-}
-body.fantasy-dark #toolbar {
-  background: linear-gradient(180deg, #1b130e 0%, #140d09 100%);
-  border-right: 1px solid #3b2413;
-  box-shadow: 3px 0 20px rgba(0, 0, 0, 0.8);
-}
+    body.fantasy-dark #sidebar {
+      background: linear-gradient(180deg, #1b130e 0%, #140d09 100%);
+      border-left: 1px solid #3b2413;
+      box-shadow: -6px 0 22px rgba(0, 0, 0, 0.85);
+    }
 
-body.fantasy-dark #sidebar {
-  background: linear-gradient(180deg, #1b130e 0%, #140d09 100%);
-  border-left: 1px solid #3b2413;
-  box-shadow: -6px 0 22px rgba(0, 0, 0, 0.85);
-}
+    body.fantasy-dark #sidebar > *,
+    body.fantasy-dark .mode-button {
+      background: #24160f;
+      border: 1px solid #4b2c16;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.9);
+      color: #f5e6c4;
+    }
 
-body.fantasy-dark #sidebar > *,
-body.fantasy-dark .mode-button {
-  background: #24160f;
-  border: 1px solid #4b2c16;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.9);
-  color: #f5e6c4;
-}
+    body.fantasy-dark #sidebar h2,
+    body.fantasy-dark #sidebar h3 {
+      color: #f5e6c4;
+    }
 
-body.fantasy-dark #sidebar h2,
-body.fantasy-dark #sidebar h3 {
-  color: #f5e6c4;
-}
+    body.fantasy-dark #sidebar p,
+    body.fantasy-dark .legend-item {
+      color: #e5d5b4;
+    }
 
-body.fantasy-dark #sidebar p,
-body.fantasy-dark .legend-item {
-  color: #e5d5b4;
-}
+    body.fantasy-dark .field-group input,
+    body.fantasy-dark .field-group select,
+    body.fantasy-dark .field-group textarea {
+      background: #1b130e;
+      border-color: #4b2c16;
+      color: #f5e6c4;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.7) inset;
+    }
 
-body.fantasy-dark .field-group input,
-body.fantasy-dark .field-group select,
-body.fantasy-dark .field-group textarea {
-  background: #1b130e;
-  border-color: #4b2c16;
-  color: #f5e6c4;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.7) inset;
-}
+    body.fantasy-dark #canvas {
+      background: #1b130e;
+    }
 
-body.fantasy-dark #canvas {
-  background: #1b130e;
-}
+    /* ===== Bottom Room / Presence Bar ===== */
+    #roomBar {
+      position: fixed;
+      left: 160px;
+      right: 260px;
+      bottom: 8px;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      background: rgba(255,255,255,0.92);
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 6px 20px rgba(15,23,42,0.12);
+      font-size: 11px;
+      backdrop-filter: blur(6px);
+    }
+
+    body.dark #roomBar {
+      background: rgba(15,23,42,0.9);
+      border-color: #111827;
+      color: #e5e7eb;
+    }
+
+    body.fantasy-light #roomBar {
+      background: rgba(243,232,200,0.95);
+      border-color: rgba(120,69,30,0.6);
+      color: #3b2f2f;
+    }
+
+    body.fantasy-dark #roomBar {
+      background: rgba(27,19,14,0.95);
+      border-color: #3b2413;
+      color: #f5e6c4;
+    }
+
+    #roomBar-left,
+    #roomBar-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #roomCodeInput {
+      width: 80px;
+      padding: 3px 6px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    #nameInput {
+      width: 90px;
+      padding: 3px 6px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      font-size: 11px;
+    }
+
+    #joinRoomButton {
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid #2563eb;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    #roomLink {
+      font-size: 11px;
+      text-decoration: underline;
+      cursor: pointer;
+      color: #6b7280;
+    }
+
+    body.dark #roomLink { color: #9ca3af; }
+    body.fantasy-light #roomLink { color: #4b3621; }
+    body.fantasy-dark #roomLink { color: #e5d5b4; }
+
+    #presenceList {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .presence-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.04);
+      font-size: 10px;
+    }
+
+    .presence-color-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
 
   </style>
+
+  <!-- Firebase SDK (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmbz6Amoun0L3ZaLvkZQ5AnEpO_mF0hEI",
+      authDomain: "worldbuilder-collab.firebaseapp.com",
+      projectId: "worldbuilder-collab",
+      storageBucket: "worldbuilder-collab.firebasestorage.app",
+      messagingSenderId: "204368325416",
+      appId: "1:204368325416:web:2336f115dcb964e44dfe1d"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+  </script>
 </head>
 <body>
 
@@ -534,6 +660,22 @@ body.fantasy-dark #canvas {
     </div>
   </div>
 
+  <!-- Bottom Room / Presence Bar -->
+  <div id="roomBar">
+    <div id="roomBar-left">
+      <span>Room:</span>
+      <input id="roomCodeInput" maxlength="6" placeholder="ABC123" />
+      <button id="joinRoomButton">Join / Create</button>
+      <span id="roomStatus"></span>
+      <span id="roomLink">copy link</span>
+    </div>
+    <div id="roomBar-right">
+      <span>You:</span>
+      <input id="nameInput" placeholder="Name" />
+      <div id="presenceList"></div>
+    </div>
+  </div>
+
   <script>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -541,13 +683,14 @@ body.fantasy-dark #canvas {
     const toolbarEl = document.getElementById("toolbar");
 
     // ---- Theme state ----
-const THEMES = ["light", "dark", "fantasyLight", "fantasyDark"];
-let currentThemeIndex = 0;      // 0 = Light
-let darkMode = false;           // used by drawing code (light vs dark backgrounds)
+    const THEMES = ["light", "dark", "fantasyLight", "fantasyDark"];
+    let currentThemeIndex = 0;      // 0 = Light
+    let darkMode = false;           // used by drawing code (light vs dark backgrounds)
 
-function getCurrentTheme() {
-  return THEMES[currentThemeIndex];
-}
+    function getCurrentTheme() {
+      return THEMES[currentThemeIndex];
+    }
+
     // ---- Pan & zoom ----
     let panX = 0;
     let panY = 0;
@@ -614,6 +757,26 @@ function getCurrentTheme() {
     const NODE_WIDTH = 140;
     const NODE_HEIGHT = 70;
     const NODE_RADIUS = 14;
+
+    // ---- Realtime collaboration state ----
+    const clientId = Math.random().toString(36).slice(2, 10);
+    let userName = "Guest-" + clientId.slice(0, 4).toUpperCase();
+    let userColor = "#" + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0");
+    let currentRoomCode = null;
+    let roomUnsubscribe = null;
+    let presenceUnsubscribe = null;
+    let localVersion = 0;
+    let applyingRemoteUpdate = false;
+    const remoteCursors = {}; // id -> {name, color, x, y, lastActive}
+
+    const roomCodeInput = document.getElementById("roomCodeInput");
+    const joinRoomButton = document.getElementById("joinRoomButton");
+    const roomStatus = document.getElementById("roomStatus");
+    const roomLink = document.getElementById("roomLink");
+    const nameInput = document.getElementById("nameInput");
+    const presenceList = document.getElementById("presenceList");
+
+    nameInput.value = userName;
 
     function getNodeAtWorld(x, y) {
       for (let n of nodes) {
@@ -833,20 +996,19 @@ function getCurrentTheme() {
       ctx.stroke();
 
       ctx.fillStyle = darkMode ? "#f9fafb" : "#111827";
-ctx.textAlign = "center";
-ctx.textBaseline = "middle";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
 
-const theme = getCurrentTheme();
-let labelFontFamily = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+      const theme = getCurrentTheme();
+      let labelFontFamily = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 
-if (theme === "fantasyLight" || theme === "fantasyDark") {
-  labelFontFamily = "\"IM Fell English\", \"UnifrakturCook\", \"Old English Text MT\", Georgia, \"Times New Roman\", serif";
-}
+      if (theme === "fantasyLight" || theme === "fantasyDark") {
+        labelFontFamily = "\"IM Fell English\", \"UnifrakturCook\", \"Old English Text MT\", Georgia, \"Times New Roman\", serif";
+      }
 
-ctx.font = `${13 / scale}px ${labelFontFamily}`;
-const label = nodeDisplayLabel(n);
-ctx.fillText(label, n.x, n.y);
-
+      ctx.font = `${13 / scale}px ${labelFontFamily}`;
+      const label = nodeDisplayLabel(n);
+      ctx.fillText(label, n.x, n.y);
     }
 
     function drawEdges() {
@@ -932,40 +1094,58 @@ ctx.fillText(label, n.x, n.y);
       }
     }
 
+    function drawRemoteCursors() {
+      const now = Date.now();
+      ctx.save();
+      ctx.textAlign = "left";
+      ctx.textBaseline = "bottom";
+      ctx.font = `${11 / scale}px system-ui, sans-serif`;
+
+      for (const id in remoteCursors) {
+        const c = remoteCursors[id];
+        if (!c || typeof c.x !== "number" || typeof c.y !== "number") continue;
+        if (now - (c.lastActive || 0) > 15000) continue; // hide stale
+
+        const r = 6 / scale;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = c.color || "#22c55e";
+        ctx.fill();
+        ctx.strokeStyle = darkMode ? "#000000" : "#ffffff";
+        ctx.lineWidth = 1 / scale;
+        ctx.stroke();
+
+        ctx.fillStyle = darkMode ? "#f9fafb" : "#111827";
+        ctx.fillText(c.name || "Guest", c.x + 8 / scale, c.y - 2 / scale);
+      }
+
+      ctx.restore();
+    }
+
     function draw() {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      function draw() {
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  const theme = getCurrentTheme();
-  let bgColor;
+      const theme = getCurrentTheme();
+      let bgColor;
 
-  if (theme === "fantasyLight") {
-    bgColor = "#f3e8c8";        // parchment
-  } else if (theme === "fantasyDark") {
-    bgColor = "#1b130e";        // dark parchment
-  } else {
-    bgColor = darkMode ? "#020617" : "#ffffff";
-  }
+      if (theme === "fantasyLight") {
+        bgColor = "#f3e8c8";        // parchment
+      } else if (theme === "fantasyDark") {
+        bgColor = "#1b130e";        // dark parchment
+      } else {
+        bgColor = darkMode ? "#020617" : "#ffffff";
+      }
 
-  ctx.fillStyle = bgColor;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.setTransform(scale, 0, 0, scale, panX, panY);
-
-  drawGrid();
-  drawEdges();
-  nodes.forEach(n => drawRoundedNode(n));
-}
-
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.setTransform(scale, 0, 0, scale, panX, panY);
 
       drawGrid();
       drawEdges();
       nodes.forEach(n => drawRoundedNode(n));
+      drawRemoteCursors();
     }
 
     function physics() {
@@ -1114,24 +1294,31 @@ ctx.fillText(label, n.x, n.y);
 
         document.getElementById("char-name").addEventListener("input", e => {
           selectedNode.data.name = e.target.value;
+          broadcastGraph();
         });
         document.getElementById("char-age").addEventListener("input", e => {
           selectedNode.data.age = e.target.value;
+          broadcastGraph();
         });
         document.getElementById("char-dob").addEventListener("input", e => {
           selectedNode.data.dob = e.target.value;
+          broadcastGraph();
         });
         document.getElementById("char-species").addEventListener("input", e => {
           selectedNode.data.species = e.target.value;
+          broadcastGraph();
         });
         document.getElementById("char-height").addEventListener("input", e => {
           selectedNode.data.height = e.target.value;
+          broadcastGraph();
         });
         document.getElementById("char-weight").addEventListener("input", e => {
           selectedNode.data.weight = e.target.value;
+          broadcastGraph();
         });
         document.getElementById("char-gender").addEventListener("input", e => {
           selectedNode.data.gender = e.target.value;
+          broadcastGraph();
         });
       } else if (selectedNode.type === "location") {
         sidebar.innerHTML = `
@@ -1158,9 +1345,11 @@ ctx.fillText(label, n.x, n.y);
 
         document.getElementById("loc-name").addEventListener("input", e => {
           selectedNode.data.name = e.target.value;
+          broadcastGraph();
         });
         document.getElementById("loc-category").addEventListener("change", e => {
           selectedNode.data.category = e.target.value;
+          broadcastGraph();
         });
       } else {
         sidebar.innerHTML = `
@@ -1181,9 +1370,11 @@ ctx.fillText(label, n.x, n.y);
 
         document.getElementById("note-title").addEventListener("input", e => {
           selectedNode.data.title = e.target.value;
+          broadcastGraph();
         });
         document.getElementById("note-content").addEventListener("input", e => {
           selectedNode.data.content = e.target.value;
+          broadcastGraph();
         });
       }
     }
@@ -1205,57 +1396,265 @@ ctx.fillText(label, n.x, n.y);
     });
 
     // Theme toggle (4 modes)
-const themeToggle = document.getElementById("themeToggle");
+    const themeToggle = document.getElementById("themeToggle");
 
-function applyTheme() {
-  const theme = getCurrentTheme();
+    function applyTheme() {
+      const theme = getCurrentTheme();
 
-  // Remove all theme classes first
-  document.body.classList.remove("dark", "fantasy-light", "fantasy-dark");
+      // Remove all theme classes first
+      document.body.classList.remove("dark", "fantasy-light", "fantasy-dark");
 
-  // Base: Light
-  darkMode = false;
+      // Base: Light
+      darkMode = false;
 
-  if (theme === "dark") {
-    document.body.classList.add("dark");
-    darkMode = true;
-  } else if (theme === "fantasyLight") {
-    document.body.classList.add("fantasy-light");
-    darkMode = false; // parchment but still "light"
-  } else if (theme === "fantasyDark") {
-    document.body.classList.add("fantasy-dark");
-    darkMode = true; // dark parchment
-  }
+      if (theme === "dark") {
+        document.body.classList.add("dark");
+        darkMode = true;
+      } else if (theme === "fantasyLight") {
+        document.body.classList.add("fantasy-light");
+        darkMode = false; // parchment but still "light"
+      } else if (theme === "fantasyDark") {
+        document.body.classList.add("fantasy-dark");
+        darkMode = true; // dark parchment
+      }
 
-  // Update button icon/label (shows what's *next*)
-  const iconSpan = themeToggle.querySelector(".icon");
-  const labelSpan = themeToggle.querySelector("span:last-child");
+      // Update button icon/label (shows what's *current*)
+      const iconSpan = themeToggle.querySelector(".icon");
+      const labelSpan = themeToggle.querySelector("span:last-child");
 
-  if (theme === "dark") {
-    if (iconSpan) iconSpan.textContent = "🌙";
-    if (labelSpan) labelSpan.textContent = "Dark";
-  } else if (theme === "fantasyLight") {
-    if (iconSpan) iconSpan.textContent = "📜";
-    if (labelSpan) labelSpan.textContent = "Fantasy Light";
-  } else if (theme === "fantasyDark") {
-    if (iconSpan) iconSpan.textContent = "🌑";
-    if (labelSpan) labelSpan.textContent = "Fantasy Dark";
-  } else if (theme === "light") {
-    if (iconSpan) iconSpan.textContent = "☀️";
-    if (labelSpan) labelSpan.textContent = "Light";
-  }
+      if (theme === "dark") {
+        if (iconSpan) iconSpan.textContent = "🌙";
+        if (labelSpan) labelSpan.textContent = "Dark";
+      } else if (theme === "fantasyLight") {
+        if (iconSpan) iconSpan.textContent = "📜";
+        if (labelSpan) labelSpan.textContent = "Fantasy Light";
+      } else if (theme === "fantasyDark") {
+        if (iconSpan) iconSpan.textContent = "🌑";
+        if (labelSpan) labelSpan.textContent = "Fantasy Dark";
+      } else if (theme === "light") {
+        if (iconSpan) iconSpan.textContent = "☀️";
+        if (labelSpan) labelSpan.textContent = "Light";
+      }
 
-  draw(); // refresh canvas colors
-}
+      draw(); // refresh canvas colors
+    }
 
-themeToggle.addEventListener("click", () => {
-  currentThemeIndex = (currentThemeIndex + 1) % THEMES.length;
-  applyTheme();
-});
+    themeToggle.addEventListener("click", () => {
+      currentThemeIndex = (currentThemeIndex + 1) % THEMES.length;
+      applyTheme();
+    });
 
-// Set initial theme on load
-applyTheme();
+    // Set initial theme on load
+    applyTheme();
 
+    // ===== Realtime: graph + presence + cursors =====
+
+    function roomDocRef() {
+      if (!currentRoomCode) return null;
+      return db.collection("worldbuilder_rooms").doc(currentRoomCode);
+    }
+
+    function presenceCollectionRef() {
+      const doc = roomDocRef();
+      if (!doc) return null;
+      return doc.collection("presence");
+    }
+
+    function joinRoom(code) {
+      code = code.toUpperCase();
+      if (roomUnsubscribe) {
+        roomUnsubscribe();
+        roomUnsubscribe = null;
+      }
+      if (presenceUnsubscribe) {
+        presenceUnsubscribe();
+        presenceUnsubscribe = null;
+      }
+
+      currentRoomCode = code;
+      roomStatus.textContent = code;
+      roomCodeInput.value = code;
+
+      const docRef = roomDocRef();
+
+      // Create room if missing, then attach listeners
+      docRef.get().then(doc => {
+        if (!doc.exists) {
+          docRef.set({
+            nodes: [],
+            edges: [],
+            version: 0,
+            updatedAt: Date.now(),
+          });
+        } else {
+          applyRemoteGraph(doc.data());
+        }
+
+        roomUnsubscribe = docRef.onSnapshot(snapshot => {
+          if (!snapshot.exists) return;
+          const data = snapshot.data();
+          if (data.version <= localVersion) return;
+          applyRemoteGraph(data);
+        });
+
+        // Setup presence for this client
+        setupPresence();
+      });
+
+      updateRoomLink();
+    }
+
+    function applyRemoteGraph(data) {
+      applyingRemoteUpdate = true;
+
+      nodes = data.nodes || [];
+      edges = data.edges || [];
+      localVersion = data.version || 0;
+
+      edges.forEach(e => { if (!e.direction) e.direction = "forward"; });
+      normalizeEdges();
+      nodes.forEach(n => {
+        if (typeof n.vx !== "number") n.vx = 0;
+        if (typeof n.vy !== "number") n.vy = 0;
+      });
+      nextNodeId = nodes.reduce((max, n) => Math.max(max, n.id), 0) + 1;
+      selectedNode = null;
+      connectSourceNode = null;
+      renderSidebar();
+
+      applyingRemoteUpdate = false;
+    }
+
+    function broadcastGraph() {
+      if (!currentRoomCode || applyingRemoteUpdate) return;
+
+      const docRef = roomDocRef();
+      normalizeEdges();
+      localVersion += 1;
+
+      docRef.set({
+        nodes,
+        edges,
+        version: localVersion,
+        updatedAt: Date.now(),
+      }, { merge: true });
+    }
+
+    function setupPresence() {
+      const colRef = presenceCollectionRef();
+      if (!colRef) return;
+
+      colRef.doc(clientId).set({
+        name: userName,
+        color: userColor,
+        x: null,
+        y: null,
+        lastActive: Date.now()
+      }, { merge: true });
+
+      if (presenceUnsubscribe) presenceUnsubscribe();
+      presenceUnsubscribe = colRef.onSnapshot(snapshot => {
+        const now = Date.now();
+        const others = [];
+        for (const k in remoteCursors) delete remoteCursors[k];
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const id = doc.id;
+          if (id === clientId) {
+            if (data.name) userName = data.name;
+            if (data.color) userColor = data.color;
+            return;
+          }
+          if (now - (data.lastActive || 0) > 30000) return; // 30s timeout
+
+          remoteCursors[id] = {
+            name: data.name || "Guest",
+            color: data.color || "#22c55e",
+            x: data.x,
+            y: data.y,
+            lastActive: data.lastActive || now
+          };
+          others.push(remoteCursors[id]);
+        });
+
+        updatePresenceList(others);
+      });
+    }
+
+    function updatePresenceList(others) {
+      presenceList.innerHTML = "";
+      others.forEach(o => {
+        const pill = document.createElement("span");
+        pill.className = "presence-pill";
+        const dot = document.createElement("span");
+        dot.className = "presence-color-dot";
+        dot.style.background = o.color || "#22c55e";
+        pill.appendChild(dot);
+        const txt = document.createElement("span");
+        txt.textContent = o.name || "Guest";
+        pill.appendChild(txt);
+        presenceList.appendChild(pill);
+      });
+    }
+
+    function updateMyCursor(x, y) {
+      const colRef = presenceCollectionRef();
+      if (!colRef) return;
+      colRef.doc(clientId).set({
+        name: userName,
+        color: userColor,
+        x,
+        y,
+        lastActive: Date.now()
+      }, { merge: true });
+    }
+
+    function updateRoomLink() {
+      if (!currentRoomCode) {
+        roomLink.textContent = "copy link";
+        return;
+      }
+      const url = window.location.origin + window.location.pathname + "?room=" + currentRoomCode;
+      roomLink.onclick = () => {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(() => {
+            roomLink.textContent = "copied!";
+            setTimeout(() => (roomLink.textContent = "copy link"), 1500);
+          });
+        } else {
+          alert(url);
+        }
+      };
+    }
+
+    joinRoomButton.addEventListener("click", () => {
+      let code = (roomCodeInput.value || "").trim().toUpperCase();
+      if (!code) {
+        const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        code = Array.from({ length: 6 }, () => charset[Math.floor(Math.random() * charset.length)]).join("");
+      }
+      joinRoom(code);
+    });
+
+    nameInput.addEventListener("input", () => {
+      userName = (nameInput.value || "").trim() || userName;
+      const colRef = presenceCollectionRef();
+      if (!colRef) return;
+      colRef.doc(clientId).set({
+        name: userName,
+        lastActive: Date.now()
+      }, { merge: true });
+    });
+
+    // Auto-join room from URL ?room=XXXX
+    (function autoJoinFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const room = params.get("room");
+      if (room) {
+        joinRoom(room.toUpperCase());
+      }
+    })();
 
     // toolbar actions
     document.getElementById("newNodeButton").addEventListener("click", () => {
@@ -1271,6 +1670,7 @@ applyTheme();
         selectedNode = node;
         renderSidebar();
       }
+      broadcastGraph();
     });
 
     document.getElementById("saveButton").addEventListener("click", () => {
@@ -1303,6 +1703,7 @@ applyTheme();
       selectedNode = null;
       connectSourceNode = null;
       renderSidebar();
+      broadcastGraph();
     });
 
     document.getElementById("clearButton").addEventListener("click", () => {
@@ -1312,6 +1713,7 @@ applyTheme();
       selectedNode = null;
       connectSourceNode = null;
       renderSidebar();
+      broadcastGraph();
     });
 
     // JSON save/load
@@ -1363,6 +1765,7 @@ applyTheme();
           selectedNode = null;
           connectSourceNode = null;
           renderSidebar();
+          broadcastGraph();
           alert("JSON loaded successfully.");
         } catch (err) {
           console.error(err);
@@ -1421,6 +1824,7 @@ applyTheme();
 
             normalizeEdges();
             connectSourceNode = null;
+            broadcastGraph();
           }
         } else {
           connectSourceNode = null;
@@ -1436,6 +1840,7 @@ applyTheme();
         const edgeIndex = getEdgeAtWorld(world.x, world.y);
         if (edgeIndex !== -1) {
           edges.splice(edgeIndex, 1);
+          broadcastGraph();
           return;
         }
         if (node) {
@@ -1446,6 +1851,7 @@ applyTheme();
             selectedNode = null;
             renderSidebar();
           }
+          broadcastGraph();
         }
       }
     });
@@ -1467,6 +1873,10 @@ applyTheme();
           lastPanScreen = { x: sx, y: sy };
         }
       }
+
+      // Update cursor presence in room
+      const world = screenToWorld(sx, sy);
+      updateMyCursor(world.x, world.y);
     });
 
     canvas.addEventListener("mouseup", () => {
