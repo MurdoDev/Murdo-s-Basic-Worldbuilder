@@ -4,6 +4,46 @@
   <meta charset="UTF-8">
   <title>Murdo's Worldbuilder</title>
   <style>
+.search-block {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(15,23,42,0.08);
+}
+
+.search-results {
+  font-size: 12px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.search-result {
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.search-result:hover {
+  background: rgba(37,99,235,0.08);
+}
+
+/* Dark + fantasy tweaks */
+body.dark .search-block {
+  border-top-color: #111827;
+}
+body.dark .search-result:hover {
+  background: rgba(59,130,246,0.3);
+}
+
+body.fantasy-light .search-block {
+  border-top-color: rgba(120,69,30,0.4);
+}
+body.fantasy-dark .search-block {
+  border-top-color: #4b2c16;
+}
+body.fantasy-dark .search-result:hover {
+  background: rgba(245,230,196,0.12);
+}
+
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -37,16 +77,15 @@
       padding-bottom: 10px;
       border-bottom: 1px solid #e5e7eb;
     }
-    /* Titles and non-card controls should span both columns */
+
     .toolbar-section .section-title,
     .toolbar-section select,
     .toolbar-section .small-btn {
       grid-column: 1 / -1;
     }
 
-    /* Optional: make the card buttons fill their grid cell nicely */
     .toolbar-section .mode-button {
-      justify-self: start; /* or center if you prefer */
+      justify-self: start;
     }
 
     .toolbar-section:last-child { border-bottom: none; }
@@ -55,7 +94,7 @@
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      color: #6b7280;
+      color: var(--section-title-color);
     }
 
     /* === BUTTONS AS CARDS === */
@@ -245,6 +284,16 @@
       border-radius: 3px;
     }
 
+    /* Explosion GIF overlay */
+    .explosion-gif {
+      position: fixed;
+      width: 128px;
+      height: 128px;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 999;
+    }
+
     /* =================== DARK MODE OVERRIDES =================== */
     body.dark {
       background: #020617;
@@ -330,27 +379,28 @@
     }
 
     /* =================== FANTASY THEMES =================== */
-
-    /* Ensure sidebar + toolbar text are definitely using the fantasy font */
     body.fantasy-light #sidebar,
     body.fantasy-dark #sidebar,
     body.fantasy-light #toolbar,
     body.fantasy-dark #toolbar {
-      font-family: "IM Fell English", "UnifrakturCook", "Old English Text MT",
-                   Georgia, "Times New Roman", serif;
+      font-family: Georgia, "Times New Roman", serif;
     }
 
-    /* Fantasy Light: parchment look */
     body.fantasy-light {
       background: #f3e8c8;
       color: #3b2f2f;
     }
 
-    /* Fantasy Dark: dark parchment */
     body.fantasy-dark {
       background: #553e30;
       color: #f5e6c4;
     }
+
+    body.fantasy-light,
+    body.fantasy-dark {
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
     body.fantasy-light #toolbar {
       background: linear-gradient(180deg, #f3e8c8 0%, #f1e0b5 100%);
       border-right: 1px solid rgba(120, 69, 30, 0.5);
@@ -363,11 +413,16 @@
       box-shadow: -6px 0 18px rgba(120, 69, 30, 0.4);
     }
 
-    body.fantasy-light #sidebar > *,
+    body.fantasy-light #sidebar > * ,
     body.fantasy-light .mode-button {
       background: #f6ecd1;
       border-color: rgba(120, 69, 30, 0.4);
       box-shadow: 0 6px 18px rgba(120, 69, 30, 0.35);
+      color: #3b2f2f;
+    }
+
+    body.fantasy-light #sidebar p,
+    body.fantasy-light .legend-item {
       color: #3b2f2f;
     }
 
@@ -380,7 +435,6 @@
       background: #f3e8c8;
     }
 
-    /* inputs/fields */
     body.fantasy-light .field-group input,
     body.fantasy-light .field-group select,
     body.fantasy-light .field-group textarea {
@@ -388,6 +442,7 @@
       border-color: rgba(120, 69, 30, 0.4);
       color: #3b2f2f;
     }
+
     body.fantasy-dark #toolbar {
       background: linear-gradient(180deg, #1b130e 0%, #140d09 100%);
       border-right: 1px solid #3b2413;
@@ -400,11 +455,25 @@
       box-shadow: -6px 0 22px rgba(0, 0, 0, 0.85);
     }
 
-    body.fantasy-dark #sidebar > *,
+    body.fantasy-dark #sidebar > * ,
     body.fantasy-dark .mode-button {
       background: #24160f;
       border: 1px solid #4b2c16;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.9);
+      color: #f5e6c4;
+    }
+
+    body.fantasy-light .mode-button.active {
+      background: #f6f0d8;
+      outline: 2px solid rgba(176,140,61,0.7);
+      box-shadow: 0 10px 26px rgba(176,140,61,0.5);
+      color: #3b2f2f;
+    }
+
+    body.fantasy-dark .mode-button.active {
+      background: #3a2516;
+      outline: 2px solid rgba(215,190,130,0.8);
+      box-shadow: 0 10px 26px rgba(0,0,0,0.9);
       color: #f5e6c4;
     }
 
@@ -431,151 +500,151 @@
       background: #1b130e;
     }
 
-    /* ===== Bottom Room / Presence Bar ===== */
-    #roomBar {
-      position: fixed;
-      left: 160px;
-      right: 260px;
-      bottom: 8px;
-      z-index: 20;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 6px 10px;
-      background: rgba(255,255,255,0.92);
-      border-radius: 999px;
-      border: 1px solid #e5e7eb;
-      box-shadow: 0 6px 20px rgba(15,23,42,0.12);
-      font-size: 11px;
-      backdrop-filter: blur(6px);
+    /* ======= NEW: Section title colors via CSS variable ======= */
+    body {
+      --section-title-color: #6b7280;
+    }
+    body.dark {
+      --section-title-color: #9ca3af;
+    }
+    body.fantasy-light {
+      --section-title-color: #5a4633;
+    }
+    body.fantasy-dark {
+      --section-title-color: #f5e6c4;
     }
 
-    body.dark #roomBar {
-      background: rgba(15,23,42,0.9);
-      border-color: #111827;
-      color: #e5e7eb;
+    /* ======= NEW: Force fantasy font on ALL toolbar text ======= */
+    body.fantasy-light #toolbar *,
+    body.fantasy-dark  #toolbar * {
+      font-family: Georgia, "Times New Roman", serif !important;
     }
 
-    body.fantasy-light #roomBar {
-      background: rgba(243,232,200,0.95);
-      border-color: rgba(120,69,30,0.6);
+    /* ======= NEW: Regal gold selects in fantasy modes ======= */
+    body.fantasy-light select,
+    body.fantasy-dark  select {
+      background: linear-gradient(180deg, #f8e7b0, #e8c978);
+      border: 1px solid #b08c3d;
       color: #3b2f2f;
+      box-shadow: 0 2px 8px rgba(176, 140, 61, 0.5);
     }
 
-    body.fantasy-dark #roomBar {
-      background: rgba(27,19,14,0.95);
-      border-color: #3b2413;
+    body.fantasy-light select option {
+      color: #3b2f2f !important;
+      background: #ffffff !important;
+    }
+
+    body.fantasy-dark select option {
+      color: #f5e6c4 !important;
+      background: #2b1a12 !important;
+    }
+
+    body.fantasy-dark select {
+      background: linear-gradient(180deg, #8a6a2f, #6d5225);
       color: #f5e6c4;
+      border-color: #d7be82;
+      box-shadow: 0 2px 12px rgba(215, 190, 130, 0.5);
     }
 
-    #roomBar-left,
-    #roomBar-right {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+    body.fantasy-light button.small-btn,
+    body.fantasy-dark  button.small-btn {
+      background: linear-gradient(180deg, #1cb924, #1d7f2a);
+      border: 1px solid #11693d;
+      color: #f2fef2;
+      box-shadow: 0 3px 10px rgba(32, 127, 29, 0.7);
     }
 
-    #roomCodeInput {
-      width: 80px;
-      padding: 3px 6px;
-      border-radius: 999px;
-      border: 1px solid #d1d5db;
-      font-size: 11px;
-      text-transform: uppercase;
+    body.fantasy-light button.small-btn:hover,
+    body.fantasy-dark  button.small-btn:hover {
+      background: linear-gradient(180deg, #26dc2f, #1b9925);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(41, 185, 28, 0.8);
     }
+#copyright {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  font-size: 11px;
+  font-family: Georgia, "Times New Roman", serif;
+  pointer-events: none;
+  z-index: 9999;
+  text-align: right;
+}
 
-    #nameInput {
-      width: 90px;
-      padding: 3px 6px;
-      border-radius: 999px;
-      border: 1px solid #d1d5db;
-      font-size: 11px;
-    }
+/* Light mode – white background */
+body:not(.dark):not(.fantasy-light):not(.fantasy-dark) #copyright {
+  color: rgba(0, 0, 0, 0.12);   /* very soft grey */
+}
 
-    #joinRoomButton {
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid #2563eb;
-      background: #2563eb;
-      color: white;
-      cursor: pointer;
-      font-size: 11px;
-    }
+/* Dark mode – navy/black background */
+body.dark #copyright {
+  color: rgba(255, 255, 255, 0.10); /* faint white */
+}
 
-    #roomLink {
-      font-size: 11px;
-      text-decoration: underline;
-      cursor: pointer;
-      color: #6b7280;
-    }
+/* Fantasy Light – parchment background (#f3e8c8) */
+body.fantasy-light #copyright {
+  color: rgba(59, 47, 47, 0.22);  /* soft brown, barely visible */
+}
 
-    body.dark #roomLink { color: #9ca3af; }
-    body.fantasy-light #roomLink { color: #4b3621; }
-    body.fantasy-dark #roomLink { color: #e5d5b4; }
+/* Fantasy Dark – deep brown background (#1b130e) */
+body.fantasy-dark #copyright {
+  color: rgba(245, 230, 196, 0.15); /* parchment-gold but very faint */
+}
+/* Make sidebar labels follow the theme */
+body.dark .field-group label {
+  color: #e5e7eb;
+}
 
-    #presenceList {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      max-width: 260px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+body.fantasy-light .field-group label {
+  color: #5a4633;
+}
 
-    .presence-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: rgba(15,23,42,0.04);
-      font-size: 10px;
-    }
+body.fantasy-dark .field-group label {
+  color: #f5e6c4;
+}
 
-    .presence-color-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      flex-shrink: 0;
-    }
+/* Search placeholder colours per theme */
+.search-block input::placeholder {
+  color: rgba(107,114,128,0.9); /* default light */
+}
+
+body.dark .search-block input::placeholder {
+  color: rgba(209,213,219,0.7);
+}
+
+body.fantasy-light .search-block input::placeholder {
+  color: rgba(90,70,51,0.7);
+}
+
+body.fantasy-dark .search-block input::placeholder {
+  color: rgba(245,230,196,0.7);
+}
 
   </style>
-
-  <!-- Firebase SDK (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAmbz6Amoun0L3ZaLvkZQ5AnEpO_mF0hEI",
-      authDomain: "worldbuilder-collab.firebaseapp.com",
-      projectId: "worldbuilder-collab",
-      storageBucket: "worldbuilder-collab.firebasestorage.app",
-      messagingSenderId: "204368325416",
-      appId: "1:204368325416:web:2336f115dcb964e44dfe1d"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-  </script>
 </head>
 <body>
 
   <!-- LEFT BAR TOOLBAR -->
   <div id="toolbar">
     <div class="toolbar-section">
-      <span class="section-title">Modes</span>
+      <span class="section-title">Tools</span>
       <button class="mode-button active" data-mode="move">
-        <span class="icon">🖐️</span><span>Move</span>
+        <span class="icon">↕</span><span>Move</span>
       </button>
       <button class="mode-button" data-mode="connect">
-        <span class="icon">🔗</span><span>Connect</span>
+        <span class="icon">⚭</span><span>Connect</span>
       </button>
       <button class="mode-button" data-mode="edit">
-        <span class="icon">✏️</span><span>Edit</span>
+        <span class="icon">✎</span><span>Edit</span>
       </button>
       <button class="mode-button" data-mode="delete">
-        <span class="icon">🗑️</span><span>Delete</span>
+        <span class="icon">✗</span><span>Delete</span>
+      </button>
+      <button class="mode-button" data-mode="explode">
+        <span class="icon">💥</span><span>Explode</span>
+      </button>
+      <button class="mode-button" data-mode="duplicate">
+        <span class="icon">⧉</span><span>Duplicate</span>
       </button>
     </div>
 
@@ -587,7 +656,10 @@
         <option value="note">Note</option>
       </select>
       <button id="newNodeButton" class="small-btn">
-        <span>➕</span><span>Node</span>
+        <span>➕</span><span>Create Node</span>
+      </button>
+      <button id="newBubbleButton" class="small-btn">
+        <span>◯</span><span>Create Bubble</span>
       </button>
     </div>
 
@@ -607,44 +679,51 @@
     </div>
 
     <div class="toolbar-section">
-      <span class="section-title">Local Save</span>
+      <span class="section-title">Save to Browser</span>
       <button id="saveButton" class="mode-button">
-        <span class="icon">💾</span><span>Save</span>
+        <span class="icon">⤓</span><span>Save</span>
       </button>
       <button id="loadButton" class="mode-button">
-        <span class="icon">📂</span><span>Load</span>
+        <span class="icon">⤒</span><span>Load</span>
       </button>
       <button id="clearButton" class="mode-button">
-        <span class="icon">🧹</span><span>Clear</span>
+        <span class="icon">↺</span><span>Clear</span>
       </button>
     </div>
 
     <div class="toolbar-section">
-      <span class="section-title">Saves</span>
+      <span class="section-title">Save to Device</span>
       <button id="saveJsonButton" class="mode-button">
-        <span class="icon">⬇️</span><span>Save JSON</span>
+        <span class="icon">⤓</span><span>Save JSON</span>
       </button>
       <button id="loadJsonButton" class="mode-button">
-        <span class="icon">⬆️</span><span>Load JSON</span>
+        <span class="icon">⤒</span><span>Load JSON</span>
       </button>
     </div>
 
     <div class="toolbar-section">
       <span class="section-title">Theme</span>
       <button id="themeToggle" class="mode-button">
-        <span class="icon">🌙</span><span>Dark</span>
+        <span class="icon">☽</span><span>Dark</span>
       </button>
     </div>
   </div>
 
   <canvas id="canvas"></canvas>
+
+  <!-- Explosion sound -->
+  <audio
+    id="explosionSound"
+    src="https://www.myinstants.com/media/sounds/deltarune-explosion.mp3"
+  ></audio>
+
   <input type="file" id="jsonFileInput" accept="application/json" style="display:none" />
 
   <!-- RIGHT SIDEBAR -->
   <div id="sidebar">
     <div>
       <h2>No node selected</h2>
-      <p>Switch to <strong>Edit ✏️</strong> mode and click a node to see its details here.</p>
+      <p>Switch to <strong>Edit</strong> mode and click a node to see its details here.</p>
       <h3>Connection Types</h3>
       <div class="connection-legend">
         <div class="legend-item"><span class="legend-color" style="background:#2196f3;"></span>friends</div>
@@ -660,22 +739,6 @@
     </div>
   </div>
 
-  <!-- Bottom Room / Presence Bar -->
-  <div id="roomBar">
-    <div id="roomBar-left">
-      <span>Room:</span>
-      <input id="roomCodeInput" maxlength="6" placeholder="ABC123" />
-      <button id="joinRoomButton">Join / Create</button>
-      <span id="roomStatus"></span>
-      <span id="roomLink">copy link</span>
-    </div>
-    <div id="roomBar-right">
-      <span>You:</span>
-      <input id="nameInput" placeholder="Name" />
-      <div id="presenceList"></div>
-    </div>
-  </div>
-
   <script>
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -684,8 +747,15 @@
 
     // ---- Theme state ----
     const THEMES = ["light", "dark", "fantasyLight", "fantasyDark"];
-    let currentThemeIndex = 0;      // 0 = Light
-    let darkMode = false;           // used by drawing code (light vs dark backgrounds)
+    let currentThemeIndex = 0;
+    let darkMode = false;
+
+    const storedThemeIndex = parseInt(localStorage.getItem("nb_themeIndex"), 10);
+    if (!Number.isNaN(storedThemeIndex) &&
+        storedThemeIndex >= 0 &&
+        storedThemeIndex < THEMES.length) {
+      currentThemeIndex = storedThemeIndex;
+    }
 
     function getCurrentTheme() {
       return THEMES[currentThemeIndex];
@@ -696,7 +766,19 @@
     let panY = 0;
     let scale = 1;
     const MIN_SCALE = 0.3;
-    const MAX_SCALE = 2.5;
+    const MAX_SCALE = 5;
+
+    const storedView = localStorage.getItem("nb_view");
+    if (storedView) {
+      try {
+        const v = JSON.parse(storedView);
+        if (typeof v.panX === "number") panX = v.panX;
+        if (typeof v.panY === "number") panY = v.panY;
+        if (typeof v.scale === "number") scale = v.scale;
+      } catch (e) {
+        console.error("Failed to restore view", e);
+      }
+    }
 
     function resizeCanvas() {
       const sidebarWidth = sidebar.offsetWidth || 260;
@@ -718,14 +800,19 @@
     // ---- State ----
     let nodes = [];
     let edges = [];
+    let bubbles = [];
     let nextNodeId = 1;
+    let nextBubbleId = 1;
 
     const MODES = {
       MOVE: "move",
       CONNECT: "connect",
       EDIT: "edit",
       DELETE: "delete",
+      EXPLODE: "explode",
+      DUPLICATE: "duplicate",
     };
+
     let currentMode = MODES.MOVE;
 
     const edgeColors = {
@@ -740,54 +827,112 @@
       coworker: "#4caf50",
     };
 
-    const BUBBLE_RADIUS = 180;
-    const BUBBLE_FORCE = 20;
-    const SPRING_LENGTH = 190;
+    // Node-node repulsion radius (existing)
+    const BUBBLE_RADIUS = 200;
+    const BUBBLE_FORCE = 40;
+
+    // Bubble shell behaviour
+    const BUBBLE_BASE_RADIUS = 160;
+    const BUBBLE_GROWTH_PER_NODE = 25;
+    const BUBBLE_INNER_STRENGTH = 400;
+    const BUBBLE_OUTER_STRENGTH = 40;
+    const BUBBLE_WALL_THICKNESS = 160;   // how wide the force ring is
+    const BUBBLE_WALL_FORCE = 50;     // strength of the wall push
+
+
+    const SPRING_LENGTH = 250;
     const SPRING_STRENGTH = 0.06;
-    const DAMPING = 0.95;
+    const DAMPING = 0.7;
 
     let draggingNode = null;
+    let draggingBubble = null;
     let dragTarget = { x: 0, y: 0 };
     let isPanning = false;
     let lastPanScreen = { x: 0, y: 0 };
 
     let selectedNode = null;
+    let selectedBubble = null;
     let connectSourceNode = null;
 
     const NODE_WIDTH = 140;
-    const NODE_HEIGHT = 70;
-    const NODE_RADIUS = 14;
+    const NODE_HEIGHT = 80;
+    const NODE_RADIUS = 10;
+    const NODE_MAX_WIDTH = NODE_WIDTH * 4; // notes can grow up to 4× width
 
-    // ---- Realtime collaboration state ----
-    const clientId = Math.random().toString(36).slice(2, 10);
-    let userName = "Guest-" + clientId.slice(0, 4).toUpperCase();
-    let userColor = "#" + Math.floor(Math.random() * 0xffffff).toString(16).padStart(6, "0");
-    let currentRoomCode = null;
-    let roomUnsubscribe = null;
-    let presenceUnsubscribe = null;
-    let localVersion = 0;
-    let applyingRemoteUpdate = false;
-    const remoteCursors = {}; // id -> {name, color, x, y, lastActive}
 
-    const roomCodeInput = document.getElementById("roomCodeInput");
-    const joinRoomButton = document.getElementById("joinRoomButton");
-    const roomStatus = document.getElementById("roomStatus");
-    const roomLink = document.getElementById("roomLink");
-    const nameInput = document.getElementById("nameInput");
-    const presenceList = document.getElementById("presenceList");
+    // ---- Autosave restore ----
+    (function restoreAutosave() {
+      const savedNodes = localStorage.getItem("nb_nodes_auto");
+      const savedEdges = localStorage.getItem("nb_edges_auto");
+      const savedBubbles = localStorage.getItem("nb_bubbles_auto");
+      if (!savedNodes || !savedEdges) return;
 
-    nameInput.value = userName;
+      try {
+        nodes = JSON.parse(savedNodes);
+        edges = JSON.parse(savedEdges);
+        bubbles = savedBubbles ? JSON.parse(savedBubbles) : [];
+
+        edges.forEach(e => {
+          if (!e.direction) e.direction = "forward";
+        });
+        normalizeEdges();
+
+        nodes.forEach(n => {
+          if (typeof n.vx !== "number") n.vx = 0;
+          if (typeof n.vy !== "number") n.vy = 0;
+        });
+        bubbles.forEach(b => {
+          if (typeof b.vx !== "number") b.vx = 0;
+          if (typeof b.vy !== "number") b.vy = 0;
+          if (typeof b.radius !== "number") b.radius = BUBBLE_BASE_RADIUS;
+        });
+
+        nextNodeId = nodes.reduce((max, n) => Math.max(max, n.id), 0) + 1;
+        nextBubbleId = bubbles.reduce((max, b) => Math.max(max, b.id), 0) + 1;
+      } catch (e) {
+        console.error("Failed to restore autosave", e);
+        nodes = [];
+        edges = [];
+        bubbles = [];
+        nextNodeId = 1;
+        nextBubbleId = 1;
+      }
+    })();
 
     function getNodeAtWorld(x, y) {
-      for (let n of nodes) {
-        if (
-          x >= n.x - NODE_WIDTH / 2 &&
-          x <= n.x + NODE_WIDTH / 2 &&
-          y >= n.y - NODE_HEIGHT / 2 &&
-          y <= n.y + NODE_HEIGHT / 2
-        ) {
-          return n;
-        }
+  for (let n of nodes) {
+    // Make sure notes have an up-to-date layout before we use width/height
+    if (n.type === "note") {
+      measureNoteLayout(n);
+    } else {
+      // give non-notes a default layout so layoutWidth/layoutHeight are defined
+      n.layoutWidth  = NODE_WIDTH;
+      n.layoutHeight = NODE_HEIGHT;
+    }
+
+    const w = n.layoutWidth || NODE_WIDTH;
+    const h = n.layoutHeight || NODE_HEIGHT;
+
+    if (
+      x >= n.x - w / 2 &&
+      x <= n.x + w / 2 &&
+      y >= n.y - h / 2 &&
+      y <= n.y + h / 2
+    ) {
+      return n;
+    }
+  }
+  return null;
+}
+
+
+
+    function getBubbleAtWorld(x, y) {
+      for (let b of bubbles) {
+        const dx = x - b.x;
+        const dy = y - b.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist <= (b.radius || BUBBLE_BASE_RADIUS)) return b;
       }
       return null;
     }
@@ -944,6 +1089,60 @@
       return node;
     }
 
+    function createBubble(x, y) {
+      const bubble = {
+        id: nextBubbleId++,
+        name: "New Bubble",
+        x,
+        y,
+        radius: BUBBLE_BASE_RADIUS,
+        vx: 0,
+        vy: 0,
+        nodeCount: 0,
+      };
+      bubbles.push(bubble);
+      return bubble;
+    }
+ 
+   function duplicateNode(node) {
+      const clonedData = JSON.parse(JSON.stringify(node.data));
+
+      const copy = {
+        id: nextNodeId++,
+        type: node.type,
+        data: clonedData,
+        x: node.x + 40, // offset so it’s not directly on top
+        y: node.y + 40,
+        vx: 0,
+        vy: 0,
+      };
+
+      nodes.push(copy);
+      return copy;
+    }
+
+    function countNodesInBubble(bubble) {
+      let count = 0;
+      const R = bubble.radius || BUBBLE_BASE_RADIUS;
+      for (const n of nodes) {
+        const dx = n.x - bubble.x;
+        const dy = n.y - bubble.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist <= R) count++;
+      }
+      return count;
+    }
+
+    function updateBubbleRadiiAndCounts() {
+      bubbles.forEach(b => {
+        const count = countNodesInBubble(b);
+        b.nodeCount = count;
+        const targetRadius = BUBBLE_BASE_RADIUS + count * BUBBLE_GROWTH_PER_NODE;
+        if (typeof b.radius !== "number") b.radius = BUBBLE_BASE_RADIUS;
+        b.radius += (targetRadius - b.radius) * 0.15; // smooth growth
+      });
+    }
+
     function drawGrid() {
       const gridSize = 70;
       const left = (0 - panX) / scale;
@@ -956,7 +1155,18 @@
       const startY = Math.floor(top / gridSize) * gridSize;
       const endY = Math.ceil(bottom / gridSize) * gridSize;
 
-      ctx.fillStyle = darkMode ? "#1f2937" : "#e5e7eb";
+      const theme = getCurrentTheme();
+      let dotColor;
+
+      if (theme === "fantasyLight") {
+        dotColor = "#d1b891";
+      } else if (theme === "fantasyDark") {
+        dotColor = "#3b2413";
+      } else {
+        dotColor = darkMode ? "#1f2937" : "#e5e7eb";
+      }
+
+      ctx.fillStyle = dotColor;
       const dotRadiusWorld = 1.5 / scale;
       for (let x = startX; x <= endX; x += gridSize) {
         for (let y = startY; y <= endY; y += gridSize) {
@@ -966,49 +1176,435 @@
         }
       }
     }
+function measureNoteLayout(n) {
+  // Values in *screen pixels*
+  const paddingXpx = 16;
+  const paddingYpx = 12;
+  const lineHeightPx = 16;
 
-    function drawRoundedNode(n) {
-      const w = NODE_WIDTH;
-      const h = NODE_HEIGHT;
-      const r = NODE_RADIUS;
-      const x = n.x - w / 2;
-      const y = n.y - h / 2;
+  // Convert padding to world units (so they behave correctly with zoom)
+  const paddingX = paddingXpx / scale;
+  const paddingY = paddingYpx / scale;
 
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-      ctx.lineTo(x + w, y + h - r);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      ctx.lineTo(x + r, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-      ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
+  const minWidthWorld = NODE_WIDTH;
+  const maxWidthWorld = NODE_MAX_WIDTH;
 
-      let fill = darkMode ? "#020617" : "#ffffff";
-      if (n === selectedNode) fill = darkMode ? "#0f172a" : "#dbeafe";
-      if (n === connectSourceNode) fill = darkMode ? "#172554" : "#fee2e2";
-      ctx.fillStyle = fill;
-      ctx.fill();
-      ctx.strokeStyle = darkMode ? "#e5e7eb" : "#111827";
-      ctx.lineWidth = 1.2 / scale;
-      ctx.stroke();
+  const theme = getCurrentTheme();
+  let labelFontFamily =
+    "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  if (theme === "fantasyLight" || theme === "fantasyDark") {
+    labelFontFamily = "Georgia, 'Times New Roman', serif";
+  }
 
-      ctx.fillStyle = darkMode ? "#f9fafb" : "#111827";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
+  const title = n.data.title || "Note";
+  const content = n.data.content || "";
 
-      const theme = getCurrentTheme();
-      let labelFontFamily = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  // Title on first line, then a blank, then content paragraphs
+  const paragraphs = [title, ""].concat(content.split(/\n/));
 
-      if (theme === "fantasyLight" || theme === "fantasyDark") {
-        labelFontFamily = "\"IM Fell English\", \"UnifrakturCook\", \"Old English Text MT\", Georgia, \"Times New Roman\", serif";
+  const lines = [];
+  let longestPx = 0;
+
+  ctx.save();
+  // Neutral transform so measurements are in raw screen pixels
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.font = `13px ${labelFontFamily}`;
+
+  const minInnerPx = (minWidthWorld - 2 * paddingX) * scale;
+  const maxInnerPx = (maxWidthWorld - 2 * paddingX) * scale;
+
+  function wrapParagraph(text) {
+    if (!text) {
+      lines.push(""); // blank line
+      return;
+    }
+
+    const words = text.split(" ");
+    let current = "";
+
+    words.forEach(word => {
+      const test = current ? current + " " + word : word;
+      const testWidth = ctx.measureText(test).width;
+
+      if (testWidth <= maxInnerPx || !current) {
+        current = test;
+      } else {
+        lines.push(current);
+        longestPx = Math.max(longestPx, ctx.measureText(current).width);
+        current = word;
+      }
+    });
+
+    if (current) {
+      lines.push(current);
+      longestPx = Math.max(longestPx, ctx.measureText(current).width);
+    }
+  }
+
+  paragraphs.forEach(p => wrapParagraph(p));
+
+  if (!lines.length) {
+    const fallback = "Note";
+    lines.push(fallback);
+    longestPx = ctx.measureText(fallback).width;
+  }
+
+  // Clamp inner text width in *pixels*, then convert back to world units
+  const innerWidthPx = Math.min(
+    maxInnerPx,
+    Math.max(minInnerPx, longestPx)
+  );
+  const innerWidthWorld = innerWidthPx / scale;
+
+  const widthWorld = innerWidthWorld + 2 * paddingX;
+  const heightWorld = lines.length * (lineHeightPx / scale) + 2 * paddingY;
+
+  n.layoutWidth = widthWorld;
+  n.layoutHeight = heightWorld;
+  n._noteLines = lines;
+  n._noteLineHeightPx = lineHeightPx;  // store in pixels
+  n._notePaddingY = paddingY;          // world units (already /scale)
+  ctx.restore();
+}
+
+
+function drawRoundedNode(n) {
+  const theme = getCurrentTheme();
+
+  // Decide font family
+  let labelFontFamily =
+    "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+  if (theme === "fantasyLight" || theme === "fantasyDark") {
+    labelFontFamily = "Georgia, 'Times New Roman', serif";
+  }
+
+  // === LAYOUT: width/height ===
+  if (n.type === "note") {
+    // dynamic layout for notes
+    measureNoteLayout(n);
+  } else {
+    // fixed size for characters & locations
+    n.layoutWidth = NODE_WIDTH;
+    n.layoutHeight = NODE_HEIGHT;
+  }
+
+  const w = n.layoutWidth || NODE_WIDTH;
+  const h = n.layoutHeight || NODE_HEIGHT;
+  const r = NODE_RADIUS;
+  const x = n.x - w / 2;
+  const y = n.y - h / 2;
+
+  // --- Rounded rect background ---
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+
+  let fill;
+  if (theme === "fantasyLight") {
+    fill = "#fef6d8";
+    if (n === selectedNode) fill = "#F2DEA9";
+    if (n === connectSourceNode) fill = "#fee2e2";
+  } else if (theme === "fantasyDark") {
+    fill = "#1b130e";
+    if (n === selectedNode) fill = "#3F2C21";
+    if (n === connectSourceNode) fill = "#4b1111";
+  } else {
+    fill = darkMode ? "#020617" : "#ffffff";
+    if (n === selectedNode) fill = darkMode ? "#0f172a" : "#dbeafe";
+    if (n === connectSourceNode) fill = darkMode ? "#172554" : "#fee2e2";
+  }
+
+  ctx.fillStyle = fill;
+  ctx.fill();
+
+  let strokeColor;
+  if (theme === "fantasyLight") {
+    strokeColor = "#8b5a30";
+  } else if (theme === "fantasyDark") {
+    strokeColor = "#f5e6c4";
+  } else {
+    strokeColor = darkMode ? "#e5e7eb" : "#111827";
+  }
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = 1.2 / scale;
+  ctx.stroke();
+
+  // --- Text setup ---
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+
+  // Base color for main label
+  let mainColor;
+  if (theme === "fantasyDark") {
+    mainColor = "#f5e6c4";
+  } else if (theme === "fantasyLight") {
+    mainColor = "#3b2f2f";
+  } else {
+    mainColor = darkMode ? "#f9fafb" : "#111827";
+  }
+
+  // Slightly faded version for subtext
+  let metaColor;
+  if (theme === "fantasyDark") {
+    metaColor = "rgba(245,230,196,0.7)";
+  } else if (theme === "fantasyLight") {
+    metaColor = "rgba(59,47,47,0.6)";
+  } else if (darkMode) {
+    metaColor = "rgba(249,250,251,0.65)";
+  } else {
+    metaColor = "rgba(17,24,39,0.6)";
+  }
+
+  // === NOTE NODES: full content, unlimited vertical ===
+  if (n.type === "note") {
+    const lines = n._noteLines || [n.data.title || "Note"];
+    const lineHeightPx = n._noteLineHeightPx || 16;
+    const paddingY = n._notePaddingY || 12 / scale; // world units
+
+    ctx.font = `${13 / scale}px ${labelFontFamily}`;
+    ctx.fillStyle = mainColor;
+
+    // Start at top edge of box + padding, instead of vertical centring
+    const h = n.layoutHeight || NODE_HEIGHT;
+    let yText = n.y - h / 2 + paddingY;
+
+        lines.forEach((line, index) => {
+      if (index === 0) {
+        // Title (first line): same size and color as before
+        ctx.font = `${13 / scale}px ${labelFontFamily}`;
+        ctx.fillStyle = mainColor;
+      } else {
+        // Content lines: slightly smaller + slightly duller
+        ctx.font = `${11.5 / scale}px ${labelFontFamily}`;
+
+        // soften/dull the colour depending on theme
+        const theme = getCurrentTheme();
+        if (theme === "fantasyDark") {
+          ctx.fillStyle = "rgba(245,230,196,0.70)";
+        } else if (theme === "fantasyLight") {
+          ctx.fillStyle = "rgba(59,47,47,0.65)";
+        } else if (darkMode) {
+          ctx.fillStyle = "rgba(229,231,235,0.65)";
+        } else {
+          ctx.fillStyle = "rgba(17,24,39,0.55)";
+        }
       }
 
-      ctx.font = `${13 / scale}px ${labelFontFamily}`;
-      const label = nodeDisplayLabel(n);
-      ctx.fillText(label, n.x, n.y);
+      ctx.fillText(line, n.x, yText);
+      yText += (lineHeightPx / scale);
+    });
+
+
+    return; // done for notes
+  }
+
+
+  // Helper for wrapping non-note text
+  const maxWidth = w - 20;
+  const lineHeight = 15 / scale;
+  const maxLines = 3;
+
+  function wrapAndTruncateText(text, maxWidth, maxLines) {
+    ctx.font = `${13 / scale}px ${labelFontFamily}`;
+    const words = text.split(" ");
+    const lines = [];
+    let current = "";
+
+    words.forEach(word => {
+      const test = current ? current + " " + word : word;
+      if (ctx.measureText(test).width <= maxWidth) {
+        current = test;
+      } else {
+        if (current) lines.push(current);
+        current = word;
+      }
+    });
+    if (current) lines.push(current);
+
+    if (lines.length <= maxLines) return lines;
+
+    const truncated = lines.slice(0, maxLines);
+    let last = truncated[maxLines - 1];
+
+    while (ctx.measureText(last + "…").width > maxWidth) {
+      last = last.slice(0, -1);
+      if (!last.length) break;
+    }
+
+    truncated[maxLines - 1] = last + "…";
+    return truncated;
+  }
+
+  // === CHARACTER NODES: Name + Species + Gender ===
+  if (n.type === "character") {
+    const name = n.data.name || "Character";
+    const species = n.data.species || "";
+    const gender = n.data.gender || "";
+
+    const nameFontSize = 13 / scale;
+    const metaFontSize = 11 / scale;
+    const nameLineHeight = 15 / scale;
+    const metaLineHeight = 13 / scale;
+
+    ctx.font = `${nameFontSize}px ${labelFontFamily}`;
+    const nameLines = wrapAndTruncateText(name, maxWidth, 2);
+
+    const metaLines = [];
+    if (species) metaLines.push(species);
+    if (gender) metaLines.push(gender);
+
+    const totalHeight =
+      nameLines.length * nameLineHeight +
+      metaLines.length * metaLineHeight;
+
+    let yText = n.y - totalHeight / 2;
+
+    ctx.font = `${nameFontSize}px ${labelFontFamily}`;
+    ctx.fillStyle = mainColor;
+    nameLines.forEach(line => {
+      ctx.fillText(line, n.x, yText);
+      yText += nameLineHeight;
+    });
+
+    if (species) {
+      ctx.font = `italic ${metaFontSize}px ${labelFontFamily}`;
+      ctx.fillStyle = metaColor;
+      ctx.fillText(species, n.x, yText);
+      yText += metaLineHeight;
+    }
+
+    if (gender) {
+      ctx.font = `${metaFontSize}px ${labelFontFamily}`;
+      ctx.fillStyle = metaColor;
+      ctx.fillText(gender, n.x, yText);
+      yText += metaLineHeight;
+    }
+
+    return;
+  }
+
+  // === DEFAULT (locations etc.): simple label, 3 lines max ===
+  const label = nodeDisplayLabel(n);
+  ctx.font = `${13 / scale}px ${labelFontFamily}`;
+  ctx.fillStyle = mainColor;
+
+  const lines = wrapAndTruncateText(label, maxWidth, maxLines);
+  const totalHeightDefault = lines.length * lineHeight;
+  let startY = n.y - totalHeightDefault / 2;
+
+  for (let i = 0; i < lines.length; i++) {
+    ctx.fillText(lines[i], n.x, startY + i * lineHeight);
+  }
+}
+
+
+    function drawBubbles() {
+  const theme = getCurrentTheme();
+  let strokeColor, labelColor;
+
+  if (theme === "fantasyLight") {
+    strokeColor = "#8b5a30";
+    labelColor = "#3b2f2f";
+  } else if (theme === "fantasyDark") {
+    strokeColor = "#f5e6c4";
+    labelColor = "#f5e6c4";
+  } else if (darkMode) {
+    strokeColor = "#4b5563";
+    labelColor = "#e5e7eb";
+  } else {
+    strokeColor = "#9ca3af";
+    labelColor = "#111827";
+  }
+
+  bubbles.forEach(b => {
+    const R = b.radius || BUBBLE_BASE_RADIUS;
+
+    // --- dotted ring ---
+    ctx.beginPath();
+    ctx.setLineDash([20 / scale, 10 / scale]);  // ← dotted
+    ctx.lineWidth = 2 / scale;
+    ctx.strokeStyle = strokeColor;
+    ctx.arc(b.x, b.y, R, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);                        // ← reset for other drawing
+
+    // label
+    const label = `${b.name || "Bubble"} (${b.nodeCount || 0})`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+
+    let labelFontFamily =
+      "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
+    if (theme === "fantasyLight" || theme === "fantasyDark") {
+      labelFontFamily = "Georgia, 'Times New Roman', serif";
+    }
+    ctx.font = `${13 / scale}px ${labelFontFamily}`;
+    ctx.fillStyle = labelColor;
+
+    ctx.fillText(label, b.x, b.y - R - 10 / scale);
+  });
+}
+
+
+    // Explosion visuals/physics
+    function spawnExplosionGif(screenX, screenY) {
+      const img = document.createElement("img");
+      img.className = "explosion-gif";
+      img.src =
+        "https://www.spriters-resource.com/media/asset_icons/159/162192.gif?t=" +
+        performance.now();
+      img.style.left = screenX + "px";
+      img.style.top = screenY + "px";
+      document.body.appendChild(img);
+      setTimeout(() => img.remove(), 1200);
+    }
+
+    function playExplosionSound() {
+      const audio = document.getElementById("explosionSound");
+      if (!audio) return;
+      try {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
+      } catch (e) {
+        console.error("Explosion sound error", e);
+      }
+    }
+
+    function triggerShockwave(worldX, worldY) {
+      const MAX_RADIUS = 600;
+      const FORCE = 2400;
+
+      nodes.forEach(n => {
+        let dx = n.x - worldX;
+        let dy = n.y - worldY;
+        let dist = Math.hypot(dx, dy);
+
+        if (!dist) dist = 0.001;
+        if (dist > MAX_RADIUS) return;
+
+        const falloff = 1 - dist / MAX_RADIUS;
+        const strength = FORCE * falloff;
+
+        dx /= dist;
+        dy /= dist;
+
+        n.vx += dx * strength;
+        n.vy += dy * strength;
+      });
+    }
+
+    function triggerExplosion(worldX, worldY, screenX, screenY) {
+      spawnExplosionGif(screenX, screenY);
+      playExplosionSound();
+      triggerShockwave(worldX, worldY);
     }
 
     function drawEdges() {
@@ -1094,34 +1690,6 @@
       }
     }
 
-    function drawRemoteCursors() {
-      const now = Date.now();
-      ctx.save();
-      ctx.textAlign = "left";
-      ctx.textBaseline = "bottom";
-      ctx.font = `${11 / scale}px system-ui, sans-serif`;
-
-      for (const id in remoteCursors) {
-        const c = remoteCursors[id];
-        if (!c || typeof c.x !== "number" || typeof c.y !== "number") continue;
-        if (now - (c.lastActive || 0) > 15000) continue; // hide stale
-
-        const r = 6 / scale;
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = c.color || "#22c55e";
-        ctx.fill();
-        ctx.strokeStyle = darkMode ? "#000000" : "#ffffff";
-        ctx.lineWidth = 1 / scale;
-        ctx.stroke();
-
-        ctx.fillStyle = darkMode ? "#f9fafb" : "#111827";
-        ctx.fillText(c.name || "Guest", c.x + 8 / scale, c.y - 2 / scale);
-      }
-
-      ctx.restore();
-    }
-
     function draw() {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1130,9 +1698,9 @@
       let bgColor;
 
       if (theme === "fantasyLight") {
-        bgColor = "#f3e8c8";        // parchment
+        bgColor = "#f3e8c8";
       } else if (theme === "fantasyDark") {
-        bgColor = "#1b130e";        // dark parchment
+        bgColor = "#1b130e";
       } else {
         bgColor = darkMode ? "#020617" : "#ffffff";
       }
@@ -1143,17 +1711,89 @@
       ctx.setTransform(scale, 0, 0, scale, panX, panY);
 
       drawGrid();
+      drawBubbles();
       drawEdges();
       nodes.forEach(n => drawRoundedNode(n));
-      drawRemoteCursors();
     }
+
+    function applyBubbleShellForces() {
+  bubbles.forEach(b => {
+    const R = b.radius || BUBBLE_BASE_RADIUS;
+
+    nodes.forEach(n => {
+      let dx = n.x - b.x;
+      let dy = n.y - b.y;
+      let dist = Math.hypot(dx, dy) || 0.001;
+
+      // Distance from the ring
+      const distFromShell = Math.abs(dist - R);
+
+      // Only apply force when close to the ring
+      if (distFromShell > BUBBLE_WALL_THICKNESS) return;
+
+      // Strength fades the farther from the ring
+      const t = 1 - distFromShell / BUBBLE_WALL_THICKNESS;
+
+      const outwardX = dx / dist;
+      const outwardY = dy / dist;
+
+      // outside → push outward; inside → push inward
+      const sign = dist > R ? 1 : -1;
+
+      const f = BUBBLE_WALL_FORCE * t;
+
+      n.vx += outwardX * sign * f;
+      n.vy += outwardY * sign * f;
+    });
+  });
+}
+
 
     function physics() {
       for (let n of nodes) {
         if (typeof n.vx !== "number") n.vx = 0;
         if (typeof n.vy !== "number") n.vy = 0;
       }
+      bubbles.forEach(b => {
+        if (typeof b.vx !== "number") b.vx = 0;
+        if (typeof b.vy !== "number") b.vy = 0;
+        if (typeof b.radius !== "number") b.radius = BUBBLE_BASE_RADIUS;
+      });
 
+      // Update bubble sizes/counts first
+      updateBubbleRadiiAndCounts();
+      // --- bubble-bubble repulsion ---
+for (let i = 0; i < bubbles.length; i++) {
+  for (let j = i + 1; j < bubbles.length; j++) {
+    const a = bubbles[i];
+    const b = bubbles[j];
+
+    const Ra = a.radius || BUBBLE_BASE_RADIUS;
+    const Rb = b.radius || BUBBLE_BASE_RADIUS;
+    const minDist = Ra + Rb + 40; // padding between bubbles
+
+    let dx = b.x - a.x;
+    let dy = b.y - a.y;
+    let dist = Math.hypot(dx, dy) || 0.001;
+
+    if (dist >= minDist) continue;
+
+    const overlap = minDist - dist;
+    const strength = 0.02 * overlap; // tweak this
+
+    dx /= dist;
+    dy /= dist;
+
+    // push them apart
+    a.vx -= dx * strength;
+    a.vy -= dy * strength;
+    b.vx += dx * strength;
+    b.vy += dy * strength;
+  }
+}
+
+
+      // Node-node repulsion
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
           const a = nodes[i];
@@ -1180,39 +1820,67 @@
         }
       }
 
-      const springPairs = {};
-      edges.forEach(e => {
-        const key =
-          e.fromId < e.toId
-            ? e.fromId + "-" + e.toId
-            : e.toId + "-" + e.fromId;
-        springPairs[key] = { fromId: e.fromId, toId: e.toId };
-      });
+     // Edge springs – longer if nodes (esp. notes) are bigger
+const springPairs = {};
+edges.forEach(e => {
+  const key =
+    e.fromId < e.toId
+      ? e.fromId + "-" + e.toId
+      : e.toId + "-" + e.fromId;
+  springPairs[key] = { fromId: e.fromId, toId: e.toId };
+});
 
-      for (const key in springPairs) {
-        const e = springPairs[key];
-        const a = getNodeById(e.fromId);
-        const b = getNodeById(e.toId);
-        if (!a || !b) continue;
+for (const key in springPairs) {
+  const e = springPairs[key];
+  const a = getNodeById(e.fromId);
+  const b = getNodeById(e.toId);
+  if (!a || !b) continue;
 
-        let dx = b.x - a.x;
-        let dy = b.y - a.y;
-        let dist = Math.hypot(dx, dy) || 0.001;
-        const diff = dist - SPRING_LENGTH;
-        const force = SPRING_STRENGTH * diff;
+  // Make sure notes have current size
+  if (a.type === "note") measureNoteLayout(a);
+  if (b.type === "note") measureNoteLayout(b);
 
-        dx /= dist;
-        dy /= dist;
+  const aW = a.layoutWidth  || NODE_WIDTH;
+  const bW = b.layoutWidth  || NODE_WIDTH;
+  const aH = a.layoutHeight || NODE_HEIGHT;
+  const bH = b.layoutHeight || NODE_HEIGHT;
 
-        const fx = dx * force;
-        const fy = dy * force;
+  // Treat each node like it has a "radius" based on its size
+  const baseRadius = NODE_WIDTH / 2; // default node
+  const aRadius = Math.max(aW, aH) / 2;
+  const bRadius = Math.max(bW, bH) / 2;
 
-        a.vx += fx;
-        a.vy += fy;
-        b.vx -= fx;
-        b.vy -= fy;
-      }
+  // Extra spacing needed beyond the default spring length
+  const extraSpacing =
+    Math.max(0, aRadius - baseRadius) +
+    Math.max(0, bRadius - baseRadius);
 
+  const desiredLength = SPRING_LENGTH + extraSpacing;
+
+  let dx = b.x - a.x;
+  let dy = b.y - a.y;
+  let dist = Math.hypot(dx, dy) || 0.001;
+
+  const diff = dist - desiredLength;
+  const force = SPRING_STRENGTH * diff;
+
+  dx /= dist;
+  dy /= dist;
+
+  const fx = dx * force;
+  const fy = dy * force;
+
+  a.vx += fx;
+  a.vy += fy;
+  b.vx -= fx;
+  b.vy -= fy;
+}
+
+
+      // Bubble shell forces on nodes
+      applyBubbleShellForces();
+
+      // Integrate nodes
       for (let n of nodes) {
         if (draggingNode === n && currentMode === MODES.MOVE) {
           n.x += (dragTarget.x - n.x) * 0.25;
@@ -1228,157 +1896,298 @@
         n.vy *= DAMPING;
       }
 
+      // Integrate bubbles
+      bubbles.forEach(b => {
+        if (draggingBubble === b && currentMode === MODES.MOVE) {
+          // direct placement in mousemove
+          b.vx = 0;
+          b.vy = 0;
+        } else {
+          b.x += b.vx * 0.08;
+          b.y += b.vy * 0.08;
+          b.vx *= DAMPING;
+          b.vy *= DAMPING;
+        }
+      });
+
       draw();
       requestAnimationFrame(physics);
     }
+function sidebarSearchHTML() {
+  return `
+    <div class="search-block">
+      <div class="field-group">
+        <label for="sidebar-search">Search characters</label>
+        <input id="sidebar-search" placeholder="Type a name...">
+      </div>
+      <div id="sidebar-search-results" class="search-results"></div>
+    </div>
+  `;
+}
+
+function sidebarSearchHTML() {
+  return `
+    <div class="search-block">
+      <div class="field-group">
+        <label for="sidebar-search">Search elements</label>
+        <input id="sidebar-search" placeholder="Type a name or title...">
+      </div>
+      <div id="sidebar-search-results" class="search-results"></div>
+    </div>
+  `;
+}
+
+function setupSidebarSearch() {
+  const input = document.getElementById("sidebar-search");
+  const resultsEl = document.getElementById("sidebar-search-results");
+  if (!input || !resultsEl) return;
+
+  function renderResults() {
+    const q = input.value.trim().toLowerCase();
+    resultsEl.innerHTML = "";
+    if (!q) return;
+
+    const matches = nodes.filter(n => {
+      if (n.type === "character") {
+        const name = (n.data.name || "").toLowerCase();
+        return name.includes(q);
+      }
+      if (n.type === "location") {
+        const name = (n.data.name || "").toLowerCase();
+        return name.includes(q);
+      }
+      if (n.type === "note") {
+        const title = (n.data.title || "").toLowerCase();
+        const content = (n.data.content || "").toLowerCase();
+        return title.includes(q) || content.includes(q);
+      }
+      return false;
+    });
+
+    matches.forEach(n => {
+      const div = document.createElement("div");
+      div.className = "search-result";
+
+      // What to show in the list
+      let displayName = "";
+      let typeLabel = "";
+
+      if (n.type === "character") {
+        displayName = n.data.name || `Character #${n.id}`;
+        typeLabel = "Character";
+      } else if (n.type === "location") {
+        displayName = n.data.name || `Location #${n.id}`;
+        typeLabel = "Location";
+      } else if (n.type === "note") {
+        displayName = n.data.title || `Note #${n.id}`;
+        typeLabel = "Note";
+      }
+
+      div.textContent = `${displayName} (${typeLabel})`;
+
+      div.addEventListener("click", () => {
+        selectedNode = n;
+        selectedBubble = null;
+
+        // centre view on the element
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        panX = cx - n.x * scale;
+        panY = cy - n.y * scale;
+
+        renderSidebar();
+      });
+
+      resultsEl.appendChild(div);
+    });
+  }
+
+  input.addEventListener("input", renderResults);
+}
+
 
     function renderSidebar() {
-      if (!selectedNode) {
-        sidebar.innerHTML = `
-          <div>
-            <h2>No node selected</h2>
-            <p>Switch to <strong>Edit ✏️</strong> mode and click a node to see its details here.</p>
-            <h3>Connection Types</h3>
-            <div class="connection-legend">
-              <div class="legend-item"><span class="legend-color" style="background:#2196f3;"></span>friends</div>
-              <div class="legend-item"><span class="legend-color" style="background:#ffd335;"></span>family</div>
-              <div class="legend-item"><span class="legend-color" style="background:#e68de0;"></span>romantic</div>
-              <div class="legend-item"><span class="legend-color" style="background:#f44336;"></span>enemy</div>
-              <div class="legend-item"><span class="legend-color" style="background:#bdbdbd;"></span>neutral</div>
-              <div class="legend-item"><span class="legend-color" style="background:#000000;"></span>traitor</div>
-              <div class="legend-item"><span class="legend-color" style="background:#8b5cf6;"></span>ex-relationship</div>
-              <div class="legend-item"><span class="legend-color" style="background:#ffeb3b;"></span>parent/caretaker</div>
-              <div class="legend-item"><span class="legend-color" style="background:#4caf50;"></span>coworkers</div>
-            </div>
-          </div>
-        `;
-        return;
-      }
+  // === NOTHING SELECTED ===
+  if (!selectedNode && !selectedBubble) {
+    sidebar.innerHTML = `
+      <div>
+        <h2>No node selected</h2>
+        <p>Switch to <strong>Edit ✎</strong> mode and click a node or bubble to see its details here.</p>
+        <h3>Connection Types</h3>
+        <div class="connection-legend">
+          <div class="legend-item"><span class="legend-color" style="background:#2196f3;"></span>friends</div>
+          <div class="legend-item"><span class="legend-color" style="background:#ffd335;"></span>family</div>
+          <div class="legend-item"><span class="legend-color" style="background:#e68de0;"></span>romantic</div>
+          <div class="legend-item"><span class="legend-color" style="background:#f44336;"></span>enemy</div>
+          <div class="legend-item"><span class="legend-color" style="background:#bdbdbd;"></span>neutral</div>
+          <div class="legend-item"><span class="legend-color" style="background:#000000;"></span>traitor</div>
+          <div class="legend-item"><span class="legend-color" style="background:#8b5cf6;"></span>ex-relationship</div>
+          <div class="legend-item"><span class="legend-color" style="background:#ffeb3b;"></span>parent/caretaker</div>
+          <div class="legend-item"><span class="legend-color" style="background:#4caf50;"></span>coworkers</div>
+        </div>
+      </div>
+      ${sidebarSearchHTML()}
+    `;
+    setupSidebarSearch();
+    return;
+  }
 
-      if (selectedNode.type === "character") {
-        sidebar.innerHTML = `
-          <div>
-            <div class="pill">Character</div>
-            <h2>${selectedNode.data.name || "Character"}</h2>
+  // === BUBBLE SELECTED ===
+  if (selectedBubble) {
+    const count = countNodesInBubble(selectedBubble);
+    sidebar.innerHTML = `
+      <div>
+        <div class="pill">Bubble</div>
+        <h2>${selectedBubble.name || "Bubble"}</h2>
+        <p>Nodes inside: ${count}</p>
 
-            <div class="field-group">
-              <label for="char-name">Name</label>
-              <input id="char-name" value="${selectedNode.data.name || ""}">
-            </div>
-            <div class="field-group">
-              <label for="char-age">Age</label>
-              <input id="char-age" value="${selectedNode.data.age || ""}">
-            </div>
-            <div class="field-group">
-              <label for="char-dob">Date of Birth</label>
-              <input id="char-dob" value="${selectedNode.data.dob || ""}">
-            </div>
-            <div class="field-group">
-              <label for="char-species">Species</label>
-              <input id="char-species" value="${selectedNode.data.species || ""}">
-            </div>
-            <div class="field-group">
-              <label for="char-height">Height</label>
-              <input id="char-height" value="${selectedNode.data.height || ""}">
-            </div>
-            <div class="field-group">
-              <label for="char-weight">Weight</label>
-              <input id="char-weight" value="${selectedNode.data.weight || ""}">
-            </div>
-            <div class="field-group">
-              <label for="char-gender">Gender</label>
-              <input id="char-gender" value="${selectedNode.data.gender || ""}">
-            </div>
-          </div>
-        `;
+        <div class="field-group">
+          <label for="bubble-name">Name</label>
+          <input id="bubble-name" value="${selectedBubble.name || ""}">
+        </div>
+      </div>
+      ${sidebarSearchHTML()}
+    `;
 
-        document.getElementById("char-name").addEventListener("input", e => {
-          selectedNode.data.name = e.target.value;
-          broadcastGraph();
-        });
-        document.getElementById("char-age").addEventListener("input", e => {
-          selectedNode.data.age = e.target.value;
-          broadcastGraph();
-        });
-        document.getElementById("char-dob").addEventListener("input", e => {
-          selectedNode.data.dob = e.target.value;
-          broadcastGraph();
-        });
-        document.getElementById("char-species").addEventListener("input", e => {
-          selectedNode.data.species = e.target.value;
-          broadcastGraph();
-        });
-        document.getElementById("char-height").addEventListener("input", e => {
-          selectedNode.data.height = e.target.value;
-          broadcastGraph();
-        });
-        document.getElementById("char-weight").addEventListener("input", e => {
-          selectedNode.data.weight = e.target.value;
-          broadcastGraph();
-        });
-        document.getElementById("char-gender").addEventListener("input", e => {
-          selectedNode.data.gender = e.target.value;
-          broadcastGraph();
-        });
-      } else if (selectedNode.type === "location") {
-        sidebar.innerHTML = `
-          <div>
-            <div class="pill">Location</div>
-            <h2>${selectedNode.data.name || "Location"}</h2>
+    document.getElementById("bubble-name").addEventListener("input", e => {
+      selectedBubble.name = e.target.value;
+    });
 
-            <div class="field-group">
-              <label for="loc-name">Name</label>
-              <input id="loc-name" value="${selectedNode.data.name || ""}">
-            </div>
-            <div class="field-group">
-              <label for="loc-category">Category</label>
-              <select id="loc-category">
-                <option value="town"${selectedNode.data.category === "town" ? " selected" : ""}>Town</option>
-                <option value="city"${selectedNode.data.category === "city" ? " selected" : ""}>City</option>
-                <option value="nature"${selectedNode.data.category === "nature" ? " selected" : ""}>Nature</option>
-                <option value="forest"${selectedNode.data.category === "forest" ? " selected" : ""}>Forest</option>
-                <option value="other"${selectedNode.data.category === "other" ? " selected" : ""}>Other</option>
-              </select>
-            </div>
-          </div>
-        `;
+    setupSidebarSearch();
+    return;
+  }
 
-        document.getElementById("loc-name").addEventListener("input", e => {
-          selectedNode.data.name = e.target.value;
-          broadcastGraph();
-        });
-        document.getElementById("loc-category").addEventListener("change", e => {
-          selectedNode.data.category = e.target.value;
-          broadcastGraph();
-        });
-      } else {
-        sidebar.innerHTML = `
-          <div>
-            <div class="pill">Note</div>
-            <h2>${selectedNode.data.title || "Note"}</h2>
+  // === CHARACTER SELECTED ===
+  if (selectedNode.type === "character") {
+    sidebar.innerHTML = `
+      <div>
+        <div class="pill">Character</div>
+        <h2>${selectedNode.data.name || "Character"}</h2>
 
-            <div class="field-group">
-              <label for="note-title">Title</label>
-              <input id="note-title" value="${selectedNode.data.title || ""}">
-            </div>
-            <div class="field-group">
-              <label for="note-content">Content</label>
-              <textarea id="note-content">${selectedNode.data.content || ""}</textarea>
-            </div>
-          </div>
-        `;
+        <div class="field-group">
+          <label for="char-name">Name</label>
+          <input id="char-name" value="${selectedNode.data.name || ""}">
+        </div>
+        <div class="field-group">
+          <label for="char-age">Age</label>
+          <input id="char-age" value="${selectedNode.data.age || ""}">
+        </div>
+        <div class="field-group">
+          <label for="char-dob">Date of Birth</label>
+          <input id="char-dob" value="${selectedNode.data.dob || ""}">
+        </div>
+        <div class="field-group">
+          <label for="char-species">Species</label>
+          <input id="char-species" value="${selectedNode.data.species || ""}">
+        </div>
+        <div class="field-group">
+          <label for="char-height">Height</label>
+          <input id="char-height" value="${selectedNode.data.height || ""}">
+        </div>
+        <div class="field-group">
+          <label for="char-weight">Weight</label>
+          <input id="char-weight" value="${selectedNode.data.weight || ""}">
+        </div>
+        <div class="field-group">
+          <label for="char-gender">Gender</label>
+          <input id="char-gender" value="${selectedNode.data.gender || ""}">
+        </div>
+      </div>
+      ${sidebarSearchHTML()}
+    `;
 
-        document.getElementById("note-title").addEventListener("input", e => {
-          selectedNode.data.title = e.target.value;
-          broadcastGraph();
-        });
-        document.getElementById("note-content").addEventListener("input", e => {
-          selectedNode.data.content = e.target.value;
-          broadcastGraph();
-        });
-      }
-    }
+    document.getElementById("char-name").addEventListener("input", e => {
+      selectedNode.data.name = e.target.value;
+    });
+    document.getElementById("char-age").addEventListener("input", e => {
+      selectedNode.data.age = e.target.value;
+    });
+    document.getElementById("char-dob").addEventListener("input", e => {
+      selectedNode.data.dob = e.target.value;
+    });
+    document.getElementById("char-species").addEventListener("input", e => {
+      selectedNode.data.species = e.target.value;
+    });
+    document.getElementById("char-height").addEventListener("input", e => {
+      selectedNode.data.height = e.target.value;
+    });
+    document.getElementById("char-weight").addEventListener("input", e => {
+      selectedNode.data.weight = e.target.value;
+    });
+    document.getElementById("char-gender").addEventListener("input", e => {
+      selectedNode.data.gender = e.target.value;
+    });
 
+    setupSidebarSearch();
+  }
+
+  // === LOCATION SELECTED ===
+  else if (selectedNode.type === "location") {
+    sidebar.innerHTML = `
+      <div>
+        <div class="pill">Location</div>
+        <h2>${selectedNode.data.name || "Location"}</h2>
+
+        <div class="field-group">
+          <label for="loc-name">Name</label>
+          <input id="loc-name" value="${selectedNode.data.name || ""}">
+        </div>
+        <div class="field-group">
+          <label for="loc-category">Category</label>
+          <select id="loc-category">
+            <option value="town"${selectedNode.data.category === "town" ? " selected" : ""}>Town</option>
+            <option value="city"${selectedNode.data.category === "city" ? " selected" : ""}>City</option>
+            <option value="nature"${selectedNode.data.category === "nature" ? " selected" : ""}>Nature</option>
+            <option value="forest"${selectedNode.data.category === "forest" ? " selected" : ""}>Forest</option>
+            <option value="other"${selectedNode.data.category === "other" ? " selected" : ""}>Other</option>
+          </select>
+        </div>
+      </div>
+      ${sidebarSearchHTML()}
+    `;
+
+    document.getElementById("loc-name").addEventListener("input", e => {
+      selectedNode.data.name = e.target.value;
+    });
+    document.getElementById("loc-category").addEventListener("change", e => {
+      selectedNode.data.category = e.target.value;
+    });
+
+    setupSidebarSearch();
+  }
+
+  // === NOTE SELECTED ===
+  else {
+    sidebar.innerHTML = `
+      <div>
+        <div class="pill">Note</div>
+        <h2>${selectedNode.data.title || "Note"}</h2>
+
+        <div class="field-group">
+          <label for="note-title">Title</label>
+          <input id="note-title" value="${selectedNode.data.title || ""}">
+        </div>
+        <div class="field-group">
+          <label for="note-content">Content</label>
+          <textarea id="note-content">${selectedNode.data.content || ""}</textarea>
+        </div>
+      </div>
+      ${sidebarSearchHTML()}
+    `;
+
+    document.getElementById("note-title").addEventListener("input", e => {
+      selectedNode.data.title = e.target.value;
+    });
+    document.getElementById("note-content").addEventListener("input", e => {
+      selectedNode.data.content = e.target.value;
+    });
+
+    setupSidebarSearch();
+  }
+}
+
+
+    // Mode buttons
     const modeButtons = document.querySelectorAll(".mode-button[data-mode]");
     modeButtons.forEach(btn => {
       btn.addEventListener("click", () => {
@@ -1390,6 +2199,7 @@
         }
         if (currentMode !== MODES.EDIT) {
           selectedNode = null;
+          selectedBubble = null;
           renderSidebar();
         }
       });
@@ -1401,10 +2211,7 @@
     function applyTheme() {
       const theme = getCurrentTheme();
 
-      // Remove all theme classes first
       document.body.classList.remove("dark", "fantasy-light", "fantasy-dark");
-
-      // Base: Light
       darkMode = false;
 
       if (theme === "dark") {
@@ -1412,249 +2219,39 @@
         darkMode = true;
       } else if (theme === "fantasyLight") {
         document.body.classList.add("fantasy-light");
-        darkMode = false; // parchment but still "light"
+        darkMode = false;
       } else if (theme === "fantasyDark") {
         document.body.classList.add("fantasy-dark");
-        darkMode = true; // dark parchment
+        darkMode = true;
       }
 
-      // Update button icon/label (shows what's *current*)
       const iconSpan = themeToggle.querySelector(".icon");
       const labelSpan = themeToggle.querySelector("span:last-child");
 
       if (theme === "dark") {
-        if (iconSpan) iconSpan.textContent = "🌙";
+        if (iconSpan) iconSpan.textContent = "☽";
         if (labelSpan) labelSpan.textContent = "Dark";
       } else if (theme === "fantasyLight") {
-        if (iconSpan) iconSpan.textContent = "📜";
+        if (iconSpan) iconSpan.textContent = "𝔏𝔲𝔵";
         if (labelSpan) labelSpan.textContent = "Fantasy Light";
       } else if (theme === "fantasyDark") {
-        if (iconSpan) iconSpan.textContent = "🌑";
+        if (iconSpan) iconSpan.textContent = "𝔑𝔬𝔵";
         if (labelSpan) labelSpan.textContent = "Fantasy Dark";
       } else if (theme === "light") {
-        if (iconSpan) iconSpan.textContent = "☀️";
+        if (iconSpan) iconSpan.textContent = "☼";
         if (labelSpan) labelSpan.textContent = "Light";
       }
 
-      draw(); // refresh canvas colors
+      draw();
     }
 
     themeToggle.addEventListener("click", () => {
       currentThemeIndex = (currentThemeIndex + 1) % THEMES.length;
+      localStorage.setItem("nb_themeIndex", String(currentThemeIndex));
       applyTheme();
     });
 
-    // Set initial theme on load
     applyTheme();
-
-    // ===== Realtime: graph + presence + cursors =====
-
-    function roomDocRef() {
-      if (!currentRoomCode) return null;
-      return db.collection("worldbuilder_rooms").doc(currentRoomCode);
-    }
-
-    function presenceCollectionRef() {
-      const doc = roomDocRef();
-      if (!doc) return null;
-      return doc.collection("presence");
-    }
-
-    function joinRoom(code) {
-      code = code.toUpperCase();
-      if (roomUnsubscribe) {
-        roomUnsubscribe();
-        roomUnsubscribe = null;
-      }
-      if (presenceUnsubscribe) {
-        presenceUnsubscribe();
-        presenceUnsubscribe = null;
-      }
-
-      currentRoomCode = code;
-      roomStatus.textContent = code;
-      roomCodeInput.value = code;
-
-      const docRef = roomDocRef();
-
-      // Create room if missing, then attach listeners
-      docRef.get().then(doc => {
-        if (!doc.exists) {
-          docRef.set({
-            nodes: [],
-            edges: [],
-            version: 0,
-            updatedAt: Date.now(),
-          });
-        } else {
-          applyRemoteGraph(doc.data());
-        }
-
-        roomUnsubscribe = docRef.onSnapshot(snapshot => {
-          if (!snapshot.exists) return;
-          const data = snapshot.data();
-          if (data.version <= localVersion) return;
-          applyRemoteGraph(data);
-        });
-
-        // Setup presence for this client
-        setupPresence();
-      });
-
-      updateRoomLink();
-    }
-
-    function applyRemoteGraph(data) {
-      applyingRemoteUpdate = true;
-
-      nodes = data.nodes || [];
-      edges = data.edges || [];
-      localVersion = data.version || 0;
-
-      edges.forEach(e => { if (!e.direction) e.direction = "forward"; });
-      normalizeEdges();
-      nodes.forEach(n => {
-        if (typeof n.vx !== "number") n.vx = 0;
-        if (typeof n.vy !== "number") n.vy = 0;
-      });
-      nextNodeId = nodes.reduce((max, n) => Math.max(max, n.id), 0) + 1;
-      selectedNode = null;
-      connectSourceNode = null;
-      renderSidebar();
-
-      applyingRemoteUpdate = false;
-    }
-
-    function broadcastGraph() {
-      if (!currentRoomCode || applyingRemoteUpdate) return;
-
-      const docRef = roomDocRef();
-      normalizeEdges();
-      localVersion += 1;
-
-      docRef.set({
-        nodes,
-        edges,
-        version: localVersion,
-        updatedAt: Date.now(),
-      }, { merge: true });
-    }
-
-    function setupPresence() {
-      const colRef = presenceCollectionRef();
-      if (!colRef) return;
-
-      colRef.doc(clientId).set({
-        name: userName,
-        color: userColor,
-        x: null,
-        y: null,
-        lastActive: Date.now()
-      }, { merge: true });
-
-      if (presenceUnsubscribe) presenceUnsubscribe();
-      presenceUnsubscribe = colRef.onSnapshot(snapshot => {
-        const now = Date.now();
-        const others = [];
-        for (const k in remoteCursors) delete remoteCursors[k];
-
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const id = doc.id;
-          if (id === clientId) {
-            if (data.name) userName = data.name;
-            if (data.color) userColor = data.color;
-            return;
-          }
-          if (now - (data.lastActive || 0) > 30000) return; // 30s timeout
-
-          remoteCursors[id] = {
-            name: data.name || "Guest",
-            color: data.color || "#22c55e",
-            x: data.x,
-            y: data.y,
-            lastActive: data.lastActive || now
-          };
-          others.push(remoteCursors[id]);
-        });
-
-        updatePresenceList(others);
-      });
-    }
-
-    function updatePresenceList(others) {
-      presenceList.innerHTML = "";
-      others.forEach(o => {
-        const pill = document.createElement("span");
-        pill.className = "presence-pill";
-        const dot = document.createElement("span");
-        dot.className = "presence-color-dot";
-        dot.style.background = o.color || "#22c55e";
-        pill.appendChild(dot);
-        const txt = document.createElement("span");
-        txt.textContent = o.name || "Guest";
-        pill.appendChild(txt);
-        presenceList.appendChild(pill);
-      });
-    }
-
-    function updateMyCursor(x, y) {
-      const colRef = presenceCollectionRef();
-      if (!colRef) return;
-      colRef.doc(clientId).set({
-        name: userName,
-        color: userColor,
-        x,
-        y,
-        lastActive: Date.now()
-      }, { merge: true });
-    }
-
-    function updateRoomLink() {
-      if (!currentRoomCode) {
-        roomLink.textContent = "copy link";
-        return;
-      }
-      const url = window.location.origin + window.location.pathname + "?room=" + currentRoomCode;
-      roomLink.onclick = () => {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(url).then(() => {
-            roomLink.textContent = "copied!";
-            setTimeout(() => (roomLink.textContent = "copy link"), 1500);
-          });
-        } else {
-          alert(url);
-        }
-      };
-    }
-
-    joinRoomButton.addEventListener("click", () => {
-      let code = (roomCodeInput.value || "").trim().toUpperCase();
-      if (!code) {
-        const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        code = Array.from({ length: 6 }, () => charset[Math.floor(Math.random() * charset.length)]).join("");
-      }
-      joinRoom(code);
-    });
-
-    nameInput.addEventListener("input", () => {
-      userName = (nameInput.value || "").trim() || userName;
-      const colRef = presenceCollectionRef();
-      if (!colRef) return;
-      colRef.doc(clientId).set({
-        name: userName,
-        lastActive: Date.now()
-      }, { merge: true });
-    });
-
-    // Auto-join room from URL ?room=XXXX
-    (function autoJoinFromUrl() {
-      const params = new URLSearchParams(window.location.search);
-      const room = params.get("room");
-      if (room) {
-        joinRoom(room.toUpperCase());
-      }
-    })();
 
     // toolbar actions
     document.getElementById("newNodeButton").addEventListener("click", () => {
@@ -1668,27 +2265,41 @@
       );
       if (currentMode === MODES.EDIT) {
         selectedNode = node;
+        selectedBubble = null;
         renderSidebar();
       }
-      broadcastGraph();
+    });
+
+    document.getElementById("newBubbleButton").addEventListener("click", () => {
+      const cx = (canvas.width / 2 - panX) / scale;
+      const cy = (canvas.height / 2 - panY) / scale;
+      const bubble = createBubble(cx, cy);
+      if (currentMode === MODES.EDIT) {
+        selectedBubble = bubble;
+        selectedNode = null;
+        renderSidebar();
+      }
     });
 
     document.getElementById("saveButton").addEventListener("click", () => {
       normalizeEdges();
       localStorage.setItem("nb_nodes", JSON.stringify(nodes));
       localStorage.setItem("nb_edges", JSON.stringify(edges));
+      localStorage.setItem("nb_bubbles", JSON.stringify(bubbles));
       alert("Saved graph to your browser storage.");
     });
 
     document.getElementById("loadButton").addEventListener("click", () => {
       const savedNodes = localStorage.getItem("nb_nodes");
       const savedEdges = localStorage.getItem("nb_edges");
+      const savedBubbles = localStorage.getItem("nb_bubbles");
       if (!savedNodes || !savedEdges) {
         alert("No saved graph found.");
         return;
       }
       nodes = JSON.parse(savedNodes);
       edges = JSON.parse(savedEdges);
+      bubbles = savedBubbles ? JSON.parse(savedBubbles) : [];
 
       edges.forEach(e => {
         if (!e.direction) e.direction = "forward";
@@ -1699,21 +2310,30 @@
         if (typeof n.vx !== "number") n.vx = 0;
         if (typeof n.vy !== "number") n.vy = 0;
       });
+      bubbles.forEach(b => {
+        if (typeof b.vx !== "number") b.vx = 0;
+        if (typeof b.vy !== "number") b.vy = 0;
+        if (typeof b.radius !== "number") b.radius = BUBBLE_BASE_RADIUS;
+      });
+
       nextNodeId = nodes.reduce((max, n) => Math.max(max, n.id), 0) + 1;
+      nextBubbleId = bubbles.reduce((max, b) => Math.max(max, b.id), 0) + 1;
+
       selectedNode = null;
+      selectedBubble = null;
       connectSourceNode = null;
       renderSidebar();
-      broadcastGraph();
     });
 
     document.getElementById("clearButton").addEventListener("click", () => {
-      if (!confirm("Clear all nodes and connections?")) return;
+      if (!confirm("Clear all nodes, bubbles, and connections?")) return;
       nodes = [];
       edges = [];
+      bubbles = [];
       selectedNode = null;
+      selectedBubble = null;
       connectSourceNode = null;
       renderSidebar();
-      broadcastGraph();
     });
 
     // JSON save/load
@@ -1723,7 +2343,7 @@
 
     saveJsonButton.addEventListener("click", () => {
       normalizeEdges();
-      const data = JSON.stringify({ nodes, edges }, null, 2);
+      const data = JSON.stringify({ nodes, edges, bubbles }, null, 2);
       const blob = new Blob([data], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -1748,11 +2368,13 @@
         try {
           const data = JSON.parse(e.target.result);
           if (!data || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
-            alert("JSON format not recognised. Expected { nodes: [...], edges: [...] }.");
+            alert("JSON format not recognised. Expected { nodes: [...], edges: [...], bubbles?: [...] }.");
             return;
           }
           nodes = data.nodes;
           edges = data.edges;
+          bubbles = Array.isArray(data.bubbles) ? data.bubbles : [];
+
           edges.forEach(e => {
             if (!e.direction) e.direction = "forward";
           });
@@ -1761,11 +2383,19 @@
             if (typeof n.vx !== "number") n.vx = 0;
             if (typeof n.vy !== "number") n.vy = 0;
           });
+          bubbles.forEach(b => {
+            if (typeof b.vx !== "number") b.vx = 0;
+            if (typeof b.vy !== "number") b.vy = 0;
+            if (typeof b.radius !== "number") b.radius = BUBBLE_BASE_RADIUS;
+          });
+
           nextNodeId = nodes.reduce((max, n) => Math.max(max, n.id), 0) + 1;
+          nextBubbleId = bubbles.reduce((max, b) => Math.max(max, b.id), 0) + 1;
+
           selectedNode = null;
+          selectedBubble = null;
           connectSourceNode = null;
           renderSidebar();
-          broadcastGraph();
           alert("JSON loaded successfully.");
         } catch (err) {
           console.error(err);
@@ -1784,63 +2414,120 @@
 
       const node = getNodeAtWorld(world.x, world.y);
 
-      if (currentMode === MODES.MOVE) {
+            if (currentMode === MODES.MOVE) {
         if (node) {
           draggingNode = node;
+          draggingBubble = null;
           dragTarget = { x: world.x, y: world.y };
         } else {
-          isPanning = true;
-          lastPanScreen = { x: sx, y: sy };
+          const bubble = getBubbleAtWorld(world.x, world.y);
+          if (bubble) {
+            draggingBubble = bubble;
+            draggingNode = null;
+          } else {
+            draggingNode = null;
+            draggingBubble = null;
+            isPanning = true;
+            lastPanScreen = { x: sx, y: sy };
+          }
         }
-      } else if (currentMode === MODES.CONNECT) {
+
+            } else if (currentMode === MODES.CONNECT) {
         if (node) {
+          // 1st click: pick a source node
           if (!connectSourceNode) {
             connectSourceNode = node;
-          } else if (connectSourceNode && connectSourceNode !== node) {
+          }
+          // Click same node again: cancel
+          else if (connectSourceNode.id === node.id) {
+            connectSourceNode = null;
+          }
+          // 2nd node: create / update edge
+          else {
             const type = document.getElementById("connectionTypeSelect").value;
-            const src = connectSourceNode.id;
-            const dst = node.id;
 
-            const sameTypeEdges = edges.filter(
+            // Check if an edge of this type already exists between them
+            let existing = edges.find(
               e =>
                 e.type === type &&
-                ((e.fromId === src && e.toId === dst) ||
-                  (e.fromId === dst && e.toId === src))
+                (
+                  (e.fromId === connectSourceNode.id && e.toId === node.id) ||
+                  (e.fromId === node.id && e.toId === connectSourceNode.id)
+                )
             );
 
-            if (sameTypeEdges.length === 0) {
+            if (!existing) {
+              // Create a one-way edge from source → target
               edges.push({
-                fromId: src,
-                toId: dst,
+                fromId: connectSourceNode.id,
+                toId: node.id,
                 type,
                 direction: "forward",
               });
             } else {
-              const e0 = sameTypeEdges[0];
-              if (e0.direction !== "both" && e0.fromId !== src) {
-                e0.direction = "both";
-              }
+              // If it already exists, make it bidirectional
+              existing.direction = "both";
             }
 
             normalizeEdges();
             connectSourceNode = null;
-            broadcastGraph();
           }
         } else {
+          // Clicked on empty space: clear pending source
           connectSourceNode = null;
         }
+
       } else if (currentMode === MODES.EDIT) {
         if (node) {
           selectedNode = node;
+          selectedBubble = null;
         } else {
-          selectedNode = null;
+          const bubble = getBubbleAtWorld(world.x, world.y);
+          if (bubble) {
+            selectedBubble = bubble;
+            selectedNode = null;
+          } else {
+            selectedNode = null;
+            selectedBubble = null;
+          }
         }
         renderSidebar();
+
+      // 🔁 NEW: DUPLICATE MODE
+      } else if (currentMode === MODES.DUPLICATE) {
+        if (node) {
+          const copy = duplicateNode(node);
+          selectedNode = copy;
+          selectedBubble = null;
+          renderSidebar();
+        } else {
+          const bubble = getBubbleAtWorld(world.x, world.y);
+          if (bubble) {
+            // If you *don’t* want bubble duplication, delete this block
+            const bubbleCopy = {
+              id: nextBubbleId++,
+              name: (bubble.name || "Bubble") + " (copy)",
+              x: bubble.x + 60,
+              y: bubble.y + 60,
+              radius: bubble.radius,
+              vx: 0,
+              vy: 0,
+              nodeCount: 0,
+            };
+            bubbles.push(bubbleCopy);
+            selectedBubble = bubbleCopy;
+            selectedNode = null;
+            renderSidebar();
+          }
+        }
+
+      } else if (currentMode === MODES.EXPLODE) {
+        triggerExplosion(world.x, world.y, e.clientX, e.clientY);
+
       } else if (currentMode === MODES.DELETE) {
         const edgeIndex = getEdgeAtWorld(world.x, world.y);
         if (edgeIndex !== -1) {
           edges.splice(edgeIndex, 1);
-          broadcastGraph();
           return;
         }
         if (node) {
@@ -1849,11 +2536,21 @@
           edges = edges.filter(e => e.fromId !== id && e.toId !== id);
           if (selectedNode && selectedNode.id === id) {
             selectedNode = null;
-            renderSidebar();
           }
-          broadcastGraph();
+          renderSidebar();
+          return;
+        }
+        const bubble = getBubbleAtWorld(world.x, world.y);
+        if (bubble) {
+          const id = bubble.id;
+          bubbles = bubbles.filter(b => b.id !== id);
+          if (selectedBubble && selectedBubble.id === id) {
+            selectedBubble = null;
+          }
+          renderSidebar();
         }
       }
+
     });
 
     canvas.addEventListener("mousemove", e => {
@@ -1865,6 +2562,10 @@
         if (draggingNode) {
           const world = screenToWorld(sx, sy);
           dragTarget = { x: world.x, y: world.y };
+        } else if (draggingBubble) {
+          const world = screenToWorld(sx, sy);
+          draggingBubble.x = world.x;
+          draggingBubble.y = world.y;
         } else if (isPanning) {
           const dx = sx - lastPanScreen.x;
           const dy = sy - lastPanScreen.y;
@@ -1873,19 +2574,17 @@
           lastPanScreen = { x: sx, y: sy };
         }
       }
-
-      // Update cursor presence in room
-      const world = screenToWorld(sx, sy);
-      updateMyCursor(world.x, world.y);
     });
 
     canvas.addEventListener("mouseup", () => {
       draggingNode = null;
+      draggingBubble = null;
       isPanning = false;
     });
 
     canvas.addEventListener("mouseleave", () => {
       draggingNode = null;
+      draggingBubble = null;
       isPanning = false;
     });
 
@@ -1906,8 +2605,30 @@
       panY = sy - worldBeforeZoom.y * scale;
     }, { passive: false });
 
+    // autosave graph + view + theme when leaving the page
+    window.addEventListener("beforeunload", () => {
+      try {
+        normalizeEdges();
+        localStorage.setItem("nb_nodes_auto", JSON.stringify(nodes));
+        localStorage.setItem("nb_edges_auto", JSON.stringify(edges));
+        localStorage.setItem("nb_bubbles_auto", JSON.stringify(bubbles));
+        localStorage.setItem(
+          "nb_view",
+          JSON.stringify({ panX, panY, scale })
+        );
+        localStorage.setItem("nb_themeIndex", String(currentThemeIndex));
+      } catch (e) {
+        // ignore storage errors
+      }
+    });
+
     renderSidebar();
     physics();
   </script>
+  <div id="copyright">
+  Copyright © 2025<br> 
+  Murdo John Macleod.<br> 
+  All rights reserved.
+</div>
 </body>
 </html>
