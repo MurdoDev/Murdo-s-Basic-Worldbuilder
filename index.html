@@ -1,9 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <link rel="icon" 
+      href="data:image/svg+xml,
+      <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+        <rect width='100' height='100' fill='%23f3e8c8'/>
+        <text x='50' y='70' font-size='50' font-family='Times' text-anchor='middle' fill='%238b5a30'>MW</text>
+      </svg>">
+
+
   <meta charset="UTF-8">
   <title>Murdo's Worldbuilder</title>
   <style>
+/* ===== Scrollbar styling for all themes ===== */
+#toolbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+#toolbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#toolbar::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: var(--scroll-thumb);
+}
+
+/* Light mode */
+body:not(.dark):not(.fantasy-light):not(.fantasy-dark) {
+  --scroll-thumb: rgba(0, 0, 0, 0.18);
+}
+
+/* Dark mode */
+body.dark {
+  --scroll-thumb: rgba(255, 255, 255, 0.18);
+}
+
+/* Fantasy Light */
+body.fantasy-light {
+  --scroll-thumb: rgba(120, 69, 30, 0.28);
+}
+
+/* Fantasy Dark */
+body.fantasy-dark {
+  --scroll-thumb: rgba(245, 230, 196, 0.25);
+}
+
 .search-block {
   margin-top: 10px;
   padding-top: 8px;
@@ -54,20 +96,27 @@ body.fantasy-dark .search-result:hover {
 
     /* === LEFT TOOLBAR AS A FULL BAR === */
     #toolbar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      bottom: 0;
-      width: 155px;
-      padding: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      background: linear-gradient(180deg,#ffffff 0%, #fbfdff 100%);
-      border-right: 1px solid rgba(15,23,42,0.06);
-      box-shadow: 3px 0 10px rgba(15,23,42,0.08);
-      z-index: 10;
-    }
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 155px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: linear-gradient(180deg,#ffffff 0%, #fbfdff 100%);
+  border-right: 1px solid rgba(15,23,42,0.06);
+  box-shadow: 3px 0 10px rgba(15,23,42,0.08);
+  z-index: 10;
+
+  /* 🔽 added: allow internal scrolling when content overflows */
+  overflow-y: auto;
+  max-height: 100vh;
+
+  scrollbar-width: thin;        /* Firefox */
+  scrollbar-color: var(--scroll-thumb) transparent;
+}
 
     .toolbar-section {
       display: grid;
@@ -627,39 +676,44 @@ body.fantasy-dark .search-block input::placeholder {
   <!-- LEFT BAR TOOLBAR -->
   <div id="toolbar">
     <div class="toolbar-section">
-      <span class="section-title">Tools</span>
-      <button class="mode-button active" data-mode="move">
-        <span class="icon">↕</span><span>Move</span>
-      </button>
-      <button class="mode-button" data-mode="connect">
-        <span class="icon">⚭</span><span>Connect</span>
-      </button>
-      <button class="mode-button" data-mode="edit">
-        <span class="icon">✎</span><span>Edit</span>
-      </button>
-      <button class="mode-button" data-mode="delete">
-        <span class="icon">✗</span><span>Delete</span>
-      </button>
-      <button class="mode-button" data-mode="explode">
-        <span class="icon">💥</span><span>Explode</span>
-      </button>
-      <button class="mode-button" data-mode="duplicate">
-        <span class="icon">⧉</span><span>Duplicate</span>
-      </button>
-    </div>
+  <span class="section-title">Tools</span>
+  <button class="mode-button active" data-mode="move">
+    <span class="icon">↕</span><span>Move</span>
+  </button>
+  <button class="mode-button" data-mode="connect">
+    <span class="icon">⚭</span><span>Connect</span>
+  </button>
+  <button class="mode-button" data-mode="edit">
+    <span class="icon">✎</span><span>Edit</span>
+  </button>
+  <button class="mode-button" data-mode="delete">
+    <span class="icon">✗</span><span>Delete</span>
+  </button>
+  <button class="mode-button" data-mode="explode">
+    <span class="icon">◎</span><span>Explode</span>
+  </button>
+  <button class="mode-button" data-mode="duplicate">
+    <span class="icon">⧉</span><span>Duplicate</span>
+  </button>
+  <button class="mode-button" data-mode="autoconnect">
+    <span class="icon">🗲</span><span>Auto Connect</span>
+  </button>
+</div>
+
 
     <div class="toolbar-section">
       <span class="section-title">Node Manager</span>
       <select id="nodeTypeSelect">
         <option value="character">Character</option>
         <option value="location">Location</option>
+        <option value="item">Item</option>
         <option value="note">Note</option>
-      </select>
+    </select>
       <button id="newNodeButton" class="small-btn">
         <span>➕</span><span>Create Node</span>
       </button>
       <button id="newBubbleButton" class="small-btn">
-        <span>◯</span><span>Create Bubble</span>
+        <span>⚪</span><span>Create Bubble</span>
       </button>
     </div>
 
@@ -677,6 +731,8 @@ body.fantasy-dark .search-block input::placeholder {
         <option value="coworker">Coworkers</option>
       </select>
     </div>
+
+
 
     <div class="toolbar-section">
       <span class="section-title">Save to Browser</span>
@@ -805,13 +861,15 @@ body.fantasy-dark .search-block input::placeholder {
     let nextBubbleId = 1;
 
     const MODES = {
-      MOVE: "move",
-      CONNECT: "connect",
-      EDIT: "edit",
-      DELETE: "delete",
-      EXPLODE: "explode",
-      DUPLICATE: "duplicate",
-    };
+  MOVE: "move",
+  CONNECT: "connect",
+  EDIT: "edit",
+  DELETE: "delete",
+  EXPLODE: "explode",
+  DUPLICATE: "duplicate",
+  AUTOCONNECT: "autoconnect",
+};
+
 
     let currentMode = MODES.MOVE;
 
@@ -839,6 +897,8 @@ body.fantasy-dark .search-block input::placeholder {
     const BUBBLE_WALL_THICKNESS = 160;   // how wide the force ring is
     const BUBBLE_WALL_FORCE = 50;     // strength of the wall push
 
+    // Autoconnect detection radius
+    const AUTO_CONNECT_RADIUS = 400; // world units
 
     const SPRING_LENGTH = 250;
     const SPRING_STRENGTH = 0.06;
@@ -847,6 +907,7 @@ body.fantasy-dark .search-block input::placeholder {
     let draggingNode = null;
     let draggingBubble = null;
     let dragTarget = { x: 0, y: 0 };
+    let bubbleDragTarget = { x: 0, y: 0 };
     let isPanning = false;
     let lastPanScreen = { x: 0, y: 0 };
 
@@ -942,16 +1003,51 @@ body.fantasy-dark .search-block input::placeholder {
     }
 
     function buildEdgeGroups() {
-      const groups = {};
-      edges.forEach((e, index) => {
-        const a = e.fromId;
-        const b = e.toId;
-        const key = a < b ? a + "-" + b : b + "-" + a;
-        if (!groups[key]) groups[key] = [];
-        groups[key].push(index);
-      });
-      return groups;
+  // Group by unordered pair, then split into forward/backward/both
+  const groups = {};
+
+  edges.forEach((e, index) => {
+    const a = e.fromId;
+    const b = e.toId;
+    const minId = Math.min(a, b);
+    const maxId = Math.max(a, b);
+    const key = minId + "-" + maxId;
+
+    if (!groups[key]) {
+      groups[key] = { forward: [], backward: [], both: [] };
     }
+
+    const dir = e.direction || "forward";
+
+    if (dir === "both") {
+      groups[key].both.push(index);
+    } else {
+      // "forward" means minId -> maxId, "backward" means maxId -> minId
+      if (e.fromId === minId) {
+        groups[key].forward.push(index);
+      } else {
+        groups[key].backward.push(index);
+      }
+    }
+  });
+
+  // Stable sort inside each lane so positions don't jump around
+  for (const key in groups) {
+    const g = groups[key];
+    ["both", "forward", "backward"].forEach(kind => {
+      g[kind].sort((i1, i2) => {
+        const e1 = edges[i1];
+        const e2 = edges[i2];
+        const k1 = `${e1.type}|${e1.direction || "forward"}|${e1.fromId}-${e1.toId}`;
+        const k2 = `${e2.type}|${e2.direction || "forward"}|${e2.fromId}-${e2.toId}`;
+        return k1.localeCompare(k2);
+      });
+    });
+  }
+
+  return groups;
+}
+
 
     function normalizeEdges() {
       const byKey = {};
@@ -980,78 +1076,104 @@ body.fantasy-dark .search-block input::placeholder {
     }
 
     function getEdgeAtWorld(x, y) {
-      const thresholdWorld = 6 / scale;
-      const groups = buildEdgeGroups();
+  const thresholdWorld = 6 / scale;
+  const groups = buildEdgeGroups();
 
-      let closestIndex = -1;
-      let closestDist = Infinity;
+  let closestIndex = -1;
+  let closestDist = Infinity;
 
-      for (const key in groups) {
-        const indices = groups[key];
-        const groupSize = indices.length;
-        const centerIndex = (groupSize - 1) / 2;
+  const laneBase   = 6 / scale;
+  const laneSpread = 4 / scale;
 
-        for (let gi = 0; gi < indices.length; gi++) {
-          const i = indices[gi];
-          const e = edges[i];
-          const a = getNodeById(e.fromId);
-          const b = getNodeById(e.toId);
-          if (!a || !b) continue;
+  for (const key in groups) {
+    const bundle = groups[key];
+    const [minIdStr, maxIdStr] = key.split("-");
+    const minId = Number(minIdStr);
+    const maxId = Number(maxIdStr);
 
-          let ax = a.x;
-          let ay = a.y;
-          let bx = b.x;
-          let by = b.y;
+    const nodeA = getNodeById(minId);
+    const nodeB = getNodeById(maxId);
+    if (!nodeA || !nodeB) continue;
 
-          let dx = bx - ax;
-          let dy = by - ay;
-          let length = Math.hypot(dx, dy);
-          if (!length) continue;
-          dx /= length;
-          dy /= length;
+    let baseAx = nodeA.x;
+    let baseAy = nodeA.y;
+    let baseBx = nodeB.x;
+    let baseBy = nodeB.y;
 
-          const perpX = -dy;
-          const perpY = dx;
+    let dx = baseBx - baseAx;
+    let dy = baseBy - baseAy;
+    let dist = Math.hypot(dx, dy) || 1;
+    dx /= dist;
+    dy /= dist;
 
-          const offsetIndex = gi - centerIndex;
-          const offsetWorld = (14 / scale) * offsetIndex;
-          const offX = perpX * offsetWorld;
-          const offY = perpY * offsetWorld;
+    const perpX = -dy;
+    const perpY = dx;
 
-          ax += offX;
-          ay += offY;
-          bx += offX;
-          by += offY;
+    const laneDefs = [
+      { kind: "both",     side: 0 },
+      { kind: "forward",  side: 1 },
+      { kind: "backward", side: -1 }
+    ];
 
-          const vx = bx - ax;
-          const vy = by - ay;
-          const lengthSq2 = vx * vx + vy * vy;
-          if (lengthSq2 === 0) continue;
+    for (const lane of laneDefs) {
+      const arr = bundle[lane.kind];
+      if (!arr || arr.length === 0) continue;
 
-          const t = Math.max(
-            0,
-            Math.min(1, ((x - ax) * vx + (y - ay) * vy) / lengthSq2)
-          );
-          const projX = ax + t * vx;
-          const projY = ay + t * vy;
-          const dist = Math.hypot(x - projX, y - projY);
+      const groupSize = arr.length;
+      const centerIndex = (groupSize - 1) / 2;
 
-          if (dist < thresholdWorld && dist < closestDist) {
-            closestDist = dist;
-            closestIndex = i;
-          }
+      for (let gi = 0; gi < arr.length; gi++) {
+        const edgeIndex = arr[gi];
+        const e = edges[edgeIndex];
+        const fromNode = getNodeById(e.fromId);
+        const toNode = getNodeById(e.toId);
+        if (!fromNode || !toNode) continue;
+
+        const laneOffset = lane.side * laneBase;
+        const internalOffset = (gi - centerIndex) * laneSpread;
+        const offsetWorld = laneOffset + internalOffset;
+
+        const offX = perpX * offsetWorld;
+        const offY = perpY * offsetWorld;
+
+        let ax = fromNode.x + offX;
+        let ay = fromNode.y + offY;
+        let bx = toNode.x + offX;
+        let by = toNode.y + offY;
+
+        const vx = bx - ax;
+        const vy = by - ay;
+        const lenSq = vx * vx + vy * vy;
+        if (!lenSq) continue;
+
+        const t = Math.max(
+          0,
+          Math.min(1, ((x - ax) * vx + (y - ay) * vy) / lenSq)
+        );
+        const projX = ax + t * vx;
+        const projY = ay + t * vy;
+        const d = Math.hypot(x - projX, y - projY);
+
+        if (d < thresholdWorld && d < closestDist) {
+          closestDist = d;
+          closestIndex = edgeIndex;
         }
       }
-
-      return closestIndex;
     }
+  }
+
+  return closestIndex;
+}
+
 
     function nodeDisplayLabel(node) {
-      if (node.type === "character") return node.data.name || "Character";
-      if (node.type === "location") return node.data.name || "Location";
-      if (node.type === "note") return node.data.title || "Note";
-      return "Node";
-    }
+  if (node.type === "character") return node.data.name || "Character";
+  if (node.type === "location") return node.data.name || "Location";
+  if (node.type === "item") return node.data.name || "Item";
+  if (node.type === "note") return node.data.title || "Note";
+  return "Node";
+}
+
 
     function createNode(type, x, y) {
       let data = {};
@@ -1069,6 +1191,8 @@ body.fantasy-dark .search-block input::placeholder {
         data = {
           name: "New Location",
           category: "town",
+          customCategory: "",
+          customCategory: ""
         };
       } else {
         data = {
@@ -1177,17 +1301,15 @@ body.fantasy-dark .search-block input::placeholder {
       }
     }
 function measureNoteLayout(n) {
-  // Values in *screen pixels*
-  const paddingXpx = 16;
-  const paddingYpx = 12;
-  const lineHeightPx = 16;
+  // World-space padding & line height so the box scales with zoom
+  const paddingX = 16;
+  const paddingY = 12;
+  const lineHeight = 16;
 
-  // Convert padding to world units (so they behave correctly with zoom)
-  const paddingX = paddingXpx / scale;
-  const paddingY = paddingYpx / scale;
-
-  const minWidthWorld = NODE_WIDTH;
-  const maxWidthWorld = NODE_MAX_WIDTH;
+  // Fixed world width for notes (2× regular node width, tweak if desired)
+  const widthWorld = NODE_WIDTH * 2;
+  const innerWidthWorld = widthWorld - 2 * paddingX;
+  const innerWidthPx = innerWidthWorld; // treat world≈px for wrapping
 
   const theme = getCurrentTheme();
   let labelFontFamily =
@@ -1199,73 +1321,110 @@ function measureNoteLayout(n) {
   const title = n.data.title || "Note";
   const content = n.data.content || "";
 
-  // Title on first line, then a blank, then content paragraphs
-  const paragraphs = [title, ""].concat(content.split(/\n/));
-
-  const lines = [];
-  let longestPx = 0;
-
+  // Helper to wrap a single paragraph into lines
   ctx.save();
-  // Neutral transform so measurements are in raw screen pixels
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); // measure in raw pixels
   ctx.font = `13px ${labelFontFamily}`;
 
-  const minInnerPx = (minWidthWorld - 2 * paddingX) * scale;
-  const maxInnerPx = (maxWidthWorld - 2 * paddingX) * scale;
-
-  function wrapParagraph(text) {
+    function wrapParagraph(text) {
+    const out = [];
     if (!text) {
-      lines.push(""); // blank line
-      return;
+      out.push("");
+      return out;
     }
 
     const words = text.split(" ");
     let current = "";
 
-    words.forEach(word => {
+    function flushCurrent() {
+      if (current) {
+        out.push(current);
+        current = "";
+      }
+    }
+
+    // Break a single too-long word into chunks that fit the width
+    function breakLongWord(word) {
+      let part = "";
+      for (const ch of word) {
+        const test = part + ch;
+        const testWidth = ctx.measureText(test).width;
+        if (testWidth <= innerWidthPx || !part) {
+          part = test;
+        } else {
+          out.push(part);   // push full chunk
+          part = ch;        // start a new chunk
+        }
+      }
+      if (part) {
+        out.push(part);
+      }
+    }
+
+    for (const word of words) {
+      const wordWidth = ctx.measureText(word).width;
+
+      // If a single word is too wide, break it into smaller chunks
+      if (wordWidth > innerWidthPx) {
+        flushCurrent();        // finish the current line first
+        breakLongWord(word);   // this may add multiple lines
+        continue;
+      }
+
       const test = current ? current + " " + word : word;
       const testWidth = ctx.measureText(test).width;
 
-      if (testWidth <= maxInnerPx || !current) {
+      if (testWidth <= innerWidthPx || !current) {
         current = test;
       } else {
-        lines.push(current);
-        longestPx = Math.max(longestPx, ctx.measureText(current).width);
+        flushCurrent();
         current = word;
       }
-    });
+    }
 
-    if (current) {
-      lines.push(current);
-      longestPx = Math.max(longestPx, ctx.measureText(current).width);
+    flushCurrent();
+    return out;
+  }
+
+
+  // 1) Wrap the TITLE into its own lines
+  const titleLines = wrapParagraph(title);
+
+  // 2) Wrap CONTENT into body lines, with a blank line between title & body
+  const bodyLines = [];
+  if (content) {
+    const paras = content.split(/\n/);
+    let firstPara = true;
+    for (const para of paras) {
+      if (firstPara) {
+        // blank line between title and first body paragraph
+        bodyLines.push("");
+        firstPara = false;
+      } else {
+        // blank line between body paragraphs
+        bodyLines.push("");
+      }
+      if (!para.trim()) continue;
+      wrapParagraph(para).forEach(l => bodyLines.push(l));
     }
   }
 
-  paragraphs.forEach(p => wrapParagraph(p));
+  ctx.restore();
 
-  if (!lines.length) {
-    const fallback = "Note";
-    lines.push(fallback);
-    longestPx = ctx.measureText(fallback).width;
-  }
+  const totalLines = titleLines.length + bodyLines.length;
+  const heightWorld = 2 * paddingY + totalLines * lineHeight;
 
-  // Clamp inner text width in *pixels*, then convert back to world units
-  const innerWidthPx = Math.min(
-    maxInnerPx,
-    Math.max(minInnerPx, longestPx)
-  );
-  const innerWidthWorld = innerWidthPx / scale;
-
-  const widthWorld = innerWidthWorld + 2 * paddingX;
-  const heightWorld = lines.length * (lineHeightPx / scale) + 2 * paddingY;
-
+  // Store world-space size so zoom affects it like other nodes
   n.layoutWidth = widthWorld;
   n.layoutHeight = heightWorld;
-  n._noteLines = lines;
-  n._noteLineHeightPx = lineHeightPx;  // store in pixels
-  n._notePaddingY = paddingY;          // world units (already /scale)
-  ctx.restore();
+
+  // Store layout info for drawing
+  n._noteTitleLines = titleLines;
+  n._noteBodyLines = bodyLines;
+  n._noteLineHeight = lineHeight; // world units
+  n._notePaddingY = paddingY;     // world units
 }
+
 
 
 function drawRoundedNode(n) {
@@ -1363,48 +1522,50 @@ function drawRoundedNode(n) {
     metaColor = "rgba(17,24,39,0.6)";
   }
 
-  // === NOTE NODES: full content, unlimited vertical ===
+      // === NOTE NODES: title + body, unlimited vertical ===
   if (n.type === "note") {
-    const lines = n._noteLines || [n.data.title || "Note"];
-    const lineHeightPx = n._noteLineHeightPx || 16;
-    const paddingY = n._notePaddingY || 12 / scale; // world units
+    const titleLines = n._noteTitleLines || [n.data.title || "Note"];
+    const bodyLines  = n._noteBodyLines || [];
+    const lineHeightWorld = n._noteLineHeight || 16;  // world units
+    const paddingY       = n._notePaddingY || 12;     // world units
 
+    const hBox = n.layoutHeight || NODE_HEIGHT;
+    let yText = n.y - hBox / 2 + paddingY;
+
+    // --- Title: ALL wrapped lines stay title style ---
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
     ctx.font = `${13 / scale}px ${labelFontFamily}`;
     ctx.fillStyle = mainColor;
-
-    // Start at top edge of box + padding, instead of vertical centring
-    const h = n.layoutHeight || NODE_HEIGHT;
-    let yText = n.y - h / 2 + paddingY;
-
-        lines.forEach((line, index) => {
-      if (index === 0) {
-        // Title (first line): same size and color as before
-        ctx.font = `${13 / scale}px ${labelFontFamily}`;
-        ctx.fillStyle = mainColor;
-      } else {
-        // Content lines: slightly smaller + slightly duller
-        ctx.font = `${11.5 / scale}px ${labelFontFamily}`;
-
-        // soften/dull the colour depending on theme
-        const theme = getCurrentTheme();
-        if (theme === "fantasyDark") {
-          ctx.fillStyle = "rgba(245,230,196,0.70)";
-        } else if (theme === "fantasyLight") {
-          ctx.fillStyle = "rgba(59,47,47,0.65)";
-        } else if (darkMode) {
-          ctx.fillStyle = "rgba(229,231,235,0.65)";
-        } else {
-          ctx.fillStyle = "rgba(17,24,39,0.55)";
-        }
-      }
-
+    titleLines.forEach(line => {
       ctx.fillText(line, n.x, yText);
-      yText += (lineHeightPx / scale);
+      yText += lineHeightWorld;
     });
 
+    // --- Body: smaller & softer style ---
+    if (bodyLines.length) {
+      const themeNow = getCurrentTheme();
+      ctx.font = `${11.5 / scale}px ${labelFontFamily}`;
+      if (themeNow === "fantasyDark") {
+        ctx.fillStyle = "rgba(245,230,196,0.70)";
+      } else if (themeNow === "fantasyLight") {
+        ctx.fillStyle = "rgba(59,47,47,0.65)";
+      } else if (darkMode) {
+        ctx.fillStyle = "rgba(229,231,235,0.65)";
+      } else {
+        ctx.fillStyle = "rgba(17,24,39,0.55)";
+      }
+
+      bodyLines.forEach(line => {
+        ctx.fillText(line, n.x, yText);
+        yText += lineHeightWorld;
+      });
+    }
 
     return; // done for notes
   }
+
+
 
 
   // Helper for wrapping non-note text
@@ -1413,60 +1574,156 @@ function drawRoundedNode(n) {
   const maxLines = 3;
 
   function wrapAndTruncateText(text, maxWidth, maxLines) {
-    ctx.font = `${13 / scale}px ${labelFontFamily}`;
-    const words = text.split(" ");
-    const lines = [];
-    let current = "";
+  ctx.font = `${13 / scale}px ${labelFontFamily}`;
 
-    words.forEach(word => {
+  if (!text) return [];
+
+  const words = text.split(/\s+/);
+  const lines = [];
+  let current = "";
+
+  function pushLine(line) {
+    if (line !== "") lines.push(line);
+  }
+
+  for (const word of words) {
+    const wordWidth = ctx.measureText(word).width;
+
+    // If the word itself is too long to fit on a single line,
+    // we split it into chunks that fit maxWidth.
+    if (wordWidth > maxWidth) {
+      // Flush current line first
+      if (current) {
+        pushLine(current);
+        current = "";
+      }
+
+      let part = "";
+      for (const ch of word) {
+        const test = part + ch;
+        if (ctx.measureText(test).width <= maxWidth) {
+          part = test;
+        } else {
+          // push full part and start a new one
+          pushLine(part);
+          part = ch;
+        }
+      }
+      if (part) {
+        // start new current line with the leftover part
+        current = part;
+      }
+    } else {
+      // Normal wrapping with spaces
       const test = current ? current + " " + word : word;
       if (ctx.measureText(test).width <= maxWidth) {
         current = test;
       } else {
-        if (current) lines.push(current);
+        pushLine(current);
         current = word;
       }
-    });
-    if (current) lines.push(current);
-
-    if (lines.length <= maxLines) return lines;
-
-    const truncated = lines.slice(0, maxLines);
-    let last = truncated[maxLines - 1];
-
-    while (ctx.measureText(last + "…").width > maxWidth) {
-      last = last.slice(0, -1);
-      if (!last.length) break;
     }
-
-    truncated[maxLines - 1] = last + "…";
-    return truncated;
   }
+
+  if (current) pushLine(current);
+
+  // If everything fits in the allowed lines, return as is
+  if (lines.length <= maxLines) return lines;
+
+  // Truncate to maxLines and add "…" at the end of the last one
+  const truncated = lines.slice(0, maxLines);
+  let last = truncated[maxLines - 1];
+
+  while (last.length > 0 && ctx.measureText(last + "…").width > maxWidth) {
+    last = last.slice(0, -1);
+  }
+
+  truncated[maxLines - 1] = last + "…";
+  return truncated;
+}
+
 
   // === CHARACTER NODES: Name + Species + Gender ===
   if (n.type === "character") {
-    const name = n.data.name || "Character";
-    const species = n.data.species || "";
-    const gender = n.data.gender || "";
+  const name = n.data.name || "Character";
+  const species = n.data.species || "";
+  const gender = n.data.gender || "";
+
+  const nameFontSize = 13 / scale;
+  const metaFontSize = 11 / scale;
+  const nameLineHeight = 15 / scale;
+  const metaLineHeight = 13 / scale;
+
+  // --- NEW: different line limits ---
+  const nameLines = wrapAndTruncateText(name, maxWidth, 3);
+  const speciesLines = species ? wrapAndTruncateText(species, maxWidth, 2) : [];
+  const genderLines = gender ? wrapAndTruncateText(gender, maxWidth, 1) : [];
+
+  const totalHeight =
+    nameLines.length * nameLineHeight +
+    speciesLines.length * metaLineHeight +
+    genderLines.length * metaLineHeight;
+
+  let yText = n.y - totalHeight / 2;
+
+  // --- Name (3 lines max) ---
+  ctx.font = `${nameFontSize}px ${labelFontFamily}`;
+  ctx.fillStyle = mainColor;
+  nameLines.forEach(line => {
+    ctx.fillText(line, n.x, yText);
+    yText += nameLineHeight;
+  });
+
+  // --- Species (2 lines max) ---
+  ctx.font = `italic ${metaFontSize}px ${labelFontFamily}`;
+  ctx.fillStyle = metaColor;
+  speciesLines.forEach(line => {
+    ctx.fillText(line, n.x, yText);
+    yText += metaLineHeight;
+  });
+
+  // --- Gender (1 line max) ---
+  ctx.font = `${metaFontSize}px ${labelFontFamily}`;
+  ctx.fillStyle = metaColor;
+  genderLines.forEach(line => {
+    ctx.fillText(line, n.x, yText);
+    yText += metaLineHeight;
+  });
+
+  return;
+}
+
+
+   // === LOCATION NODES: Name + Type under it ===
+  if (n.type === "location") {
+    const name = n.data.name || "Location";
+
+    // Compute pretty type string
+    let rawCat = n.data.category || "";
+    let prettyType = "";
+    if (rawCat === "custom" && n.data.customCategory) {
+      prettyType = n.data.customCategory;
+    } else if (rawCat) {
+      prettyType = rawCat.charAt(0).toUpperCase() + rawCat.slice(1);
+    }
 
     const nameFontSize = 13 / scale;
-    const metaFontSize = 11 / scale;
+    const typeFontSize = 11 / scale;
     const nameLineHeight = 15 / scale;
-    const metaLineHeight = 13 / scale;
+    const typeLineHeight = 13 / scale;
 
-    ctx.font = `${nameFontSize}px ${labelFontFamily}`;
-    const nameLines = wrapAndTruncateText(name, maxWidth, 2);
-
-    const metaLines = [];
-    if (species) metaLines.push(species);
-    if (gender) metaLines.push(gender);
+    const nameLines = wrapAndTruncateText(name, maxWidth, 3);
+    const typeLines = prettyType
+      ? wrapAndTruncateText(prettyType, maxWidth, 2)
+      : [];
 
     const totalHeight =
       nameLines.length * nameLineHeight +
-      metaLines.length * metaLineHeight;
+      typeLines.length * typeLineHeight;
 
     let yText = n.y - totalHeight / 2;
 
+    // Name
     ctx.font = `${nameFontSize}px ${labelFontFamily}`;
     ctx.fillStyle = mainColor;
     nameLines.forEach(line => {
@@ -1474,24 +1731,61 @@ function drawRoundedNode(n) {
       yText += nameLineHeight;
     });
 
-    if (species) {
-      ctx.font = `italic ${metaFontSize}px ${labelFontFamily}`;
+    // Type (small, duller)
+    if (typeLines.length) {
+      ctx.font = `italic ${typeFontSize}px ${labelFontFamily}`;
       ctx.fillStyle = metaColor;
-      ctx.fillText(species, n.x, yText);
-      yText += metaLineHeight;
-    }
-
-    if (gender) {
-      ctx.font = `${metaFontSize}px ${labelFontFamily}`;
-      ctx.fillStyle = metaColor;
-      ctx.fillText(gender, n.x, yText);
-      yText += metaLineHeight;
+      typeLines.forEach(line => {
+        ctx.fillText(line, n.x, yText);
+        yText += typeLineHeight;
+      });
     }
 
     return;
   }
 
-  // === DEFAULT (locations etc.): simple label, 3 lines max ===
+  // === ITEM NODES: Name + Type under it ===
+  if (n.type === "item") {
+    const name = n.data.name || "Item";
+    const typeLabel = n.data.itemType || "";
+
+    const nameFontSize = 13 / scale;
+    const typeFontSize = 11 / scale;
+    const nameLineHeight = 15 / scale;
+    const typeLineHeight = 13 / scale;
+
+    const nameLines = wrapAndTruncateText(name, maxWidth, 3);
+    const typeLines = typeLabel
+      ? wrapAndTruncateText(typeLabel, maxWidth, 2)
+      : [];
+
+    const totalHeight =
+      nameLines.length * nameLineHeight +
+      typeLines.length * typeLineHeight;
+
+    let yText = n.y - totalHeight / 2;
+
+    // Name
+    ctx.font = `${nameFontSize}px ${labelFontFamily}`;
+    ctx.fillStyle = mainColor;
+    nameLines.forEach(line => {
+      ctx.fillText(line, n.x, yText);
+      yText += nameLineHeight;
+    });
+
+    // Type under it
+    if (typeLines.length) {
+      ctx.font = `italic ${typeFontSize}px ${labelFontFamily}`;
+      ctx.fillStyle = metaColor;
+      typeLines.forEach(line => {
+        ctx.fillText(line, n.x, yText);
+        yText += typeLineHeight;
+      });
+    }
+
+    return;
+  }
+  // === DEFAULT (notes already handled above): simple label, 3 lines max ===
   const label = nodeDisplayLabel(n);
   ctx.font = `${13 / scale}px ${labelFontFamily}`;
   ctx.fillStyle = mainColor;
@@ -1559,7 +1853,7 @@ function drawRoundedNode(n) {
       const img = document.createElement("img");
       img.className = "explosion-gif";
       img.src =
-        "https://www.spriters-resource.com/media/asset_icons/159/162192.gif?t=" +
+        "https://www.spriters-resource.com/media/asset_icons/159/162192.gif?t=10" +
         performance.now();
       img.style.left = screenX + "px";
       img.style.top = screenY + "px";
@@ -1579,27 +1873,48 @@ function drawRoundedNode(n) {
     }
 
     function triggerShockwave(worldX, worldY) {
-      const MAX_RADIUS = 600;
-      const FORCE = 2400;
+  const MAX_RADIUS = 600;
+  const FORCE = 2400;
 
-      nodes.forEach(n => {
-        let dx = n.x - worldX;
-        let dy = n.y - worldY;
-        let dist = Math.hypot(dx, dy);
+  // Nodes
+  nodes.forEach(n => {
+    let dx = n.x - worldX;
+    let dy = n.y - worldY;
+    let dist = Math.hypot(dx, dy);
 
-        if (!dist) dist = 0.001;
-        if (dist > MAX_RADIUS) return;
+    if (!dist) dist = 0.001;
+    if (dist > MAX_RADIUS) return;
 
-        const falloff = 1 - dist / MAX_RADIUS;
-        const strength = FORCE * falloff;
+    const falloff = 1 - dist / MAX_RADIUS;
+    const strength = FORCE * falloff;
 
-        dx /= dist;
-        dy /= dist;
+    dx /= dist;
+    dy /= dist;
 
-        n.vx += dx * strength;
-        n.vy += dy * strength;
-      });
-    }
+    n.vx += dx * strength;
+    n.vy += dy * strength;
+  });
+
+  // Bubbles
+  bubbles.forEach(b => {
+    let dx = b.x - worldX;
+    let dy = b.y - worldY;
+    let dist = Math.hypot(dx, dy);
+
+    if (!dist) dist = 0.001;
+    if (dist > MAX_RADIUS) return;
+
+    const falloff = 1 - dist / MAX_RADIUS;
+    const strength = FORCE * falloff * 0.7; // a bit gentler than nodes
+
+    dx /= dist;
+    dy /= dist;
+
+    b.vx += dx * strength;
+    b.vy += dy * strength;
+  });
+}
+
 
     function triggerExplosion(worldX, worldY, screenX, screenY) {
       spawnExplosionGif(screenX, screenY);
@@ -1608,87 +1923,124 @@ function drawRoundedNode(n) {
     }
 
     function drawEdges() {
-      const groups = buildEdgeGroups();
-      ctx.lineWidth = 2 / scale;
+  const groups = buildEdgeGroups();
+  ctx.lineWidth = 4 / scale;
 
-      for (const key in groups) {
-        const indices = groups[key];
-        const groupSize = indices.length;
-        const centerIndex = (groupSize - 1) / 2;
+  // Tiny offsets so everything stays nicely bunched
+  const laneBase   = 12 / scale; // distance between forward and backward lanes
+  const laneSpread = 12 / scale; // spread for multiple edges *within* a lane
 
-        for (let gi = 0; gi < indices.length; gi++) {
-          const i = indices[gi];
-          const e = edges[i];
-          const a = getNodeById(e.fromId);
-          const b = getNodeById(e.toId);
-          if (!a || !b) continue;
+  for (const key in groups) {
+    const bundle = groups[key];
+    const [minIdStr, maxIdStr] = key.split("-");
+    const minId = Number(minIdStr);
+    const maxId = Number(maxIdStr);
 
-          let ax = a.x;
-          let ay = a.y;
-          let bx = b.x;
-          let by = b.y;
+    const nodeA = getNodeById(minId);
+    const nodeB = getNodeById(maxId);
+    if (!nodeA || !nodeB) continue;
 
-          let dx = bx - ax;
-          let dy = by - ay;
-          let dist = Math.hypot(dx, dy) || 1;
-          dx /= dist;
-          dy /= dist;
+    // Canonical line from minId -> maxId
+    let baseAx = nodeA.x;
+    let baseAy = nodeA.y;
+    let baseBx = nodeB.x;
+    let baseBy = nodeB.y;
 
-          const perpX = -dy;
-          const perpY = dx;
+    let dx = baseBx - baseAx;
+    let dy = baseBy - baseAy;
+    let dist = Math.hypot(dx, dy) || 1;
+    dx /= dist;
+    dy /= dist;
 
-          const offsetIndex = gi - centerIndex;
-          const offsetWorld = (14 / scale) * offsetIndex;
-          const offX = perpX * offsetWorld;
-          const offY = perpY * offsetWorld;
+    // Perpendicular
+    const perpX = -dy;
+    const perpY = dx;
 
-          ax += offX;
-          ay += offY;
-          bx += offX;
-          by += offY;
+    // We draw lanes in this order:
+    const laneDefs = [
+      { kind: "both",     side: 0 },  // centre
+      { kind: "forward",  side: 1 },  // tiny offset one way
+      { kind: "backward", side: -1 }  // tiny offset the other way
+    ];
 
-          const color = edgeColors[e.type] || "#4b5563";
-          ctx.strokeStyle = color;
+    for (const lane of laneDefs) {
+      const arr = bundle[lane.kind];
+      if (!arr || arr.length === 0) continue;
+
+      const groupSize = arr.length;
+      const centerIndex = (groupSize - 1) / 2;
+
+      for (let gi = 0; gi < arr.length; gi++) {
+        const edgeIndex = arr[gi];
+        const e = edges[edgeIndex];
+        const fromNode = getNodeById(e.fromId);
+        const toNode = getNodeById(e.toId);
+        if (!fromNode || !toNode) continue;
+
+        // Main lane offset (different for forward/backward/both)
+        const laneOffset = lane.side * laneBase;
+        // Small spreading inside each lane
+        const internalOffset = (gi - centerIndex) * laneSpread;
+        const offsetWorld = laneOffset + internalOffset;
+
+        const offX = perpX * offsetWorld;
+        const offY = perpY * offsetWorld;
+
+        let ax = fromNode.x + offX;
+        let ay = fromNode.y + offY;
+        let bx = toNode.x + offX;
+        let by = toNode.y + offY;
+
+        const color = edgeColors[e.type] || "#4b5563";
+        ctx.strokeStyle = color;
+
+        // Line
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.stroke();
+
+        // Middle decoration: arrow or dot
+        const mx = (ax + bx) / 2;
+        const my = (ay + by) / 2;
+
+        if (e.direction === "both") {
+          const radius = 7 / scale;
+          ctx.beginPath();
+          ctx.arc(mx, my, radius, 0, Math.PI * 2);
+          ctx.fillStyle = color;
+          ctx.fill();
+        } else {
+          const arrowSize = 10 / scale;
+          const vx = bx - ax;
+          const vy = by - ay;
+          const vlen = Math.hypot(vx, vy) || 1;
+          const ux = vx / vlen;
+          const uy = vy / vlen;
+
+          const tipX = mx + ux * arrowSize;
+          const tipY = my + uy * arrowSize;
+          const backX = mx - ux * arrowSize;
+          const backY = my - uy * arrowSize;
+
+          const leftX = backX + (-uy) * arrowSize * 0.6;
+          const leftY = backY + (ux) * arrowSize * 0.6;
+          const rightX = backX + (uy) * arrowSize * 0.6;
+          const rightY = backY + (-ux) * arrowSize * 0.6;
 
           ctx.beginPath();
-          ctx.moveTo(ax, ay);
-          ctx.lineTo(bx, by);
-          ctx.stroke();
-
-          const mx = (ax + bx) / 2;
-          const my = (ay + by) / 2;
-
-          if (e.direction === "both") {
-            const radius = 5 / scale;
-            ctx.beginPath();
-            ctx.arc(mx, my, radius, 0, Math.PI * 2);
-            ctx.fillStyle = color;
-            ctx.fill();
-          } else {
-            const arrowSize = 7 / scale;
-            const tipX = mx + dx * arrowSize;
-            const tipY = my + dy * arrowSize;
-
-            const backX = mx - dx * arrowSize;
-            const backY = my - dy * arrowSize;
-
-            const leftX = backX + (-dy) * arrowSize * 0.6;
-            const leftY = backY + (dx) * arrowSize * 0.6;
-
-            const rightX = backX + (dy) * arrowSize * 0.6;
-            const rightY = backY + (-dx) * arrowSize * 0.6;
-
-            ctx.beginPath();
-            ctx.moveTo(tipX, tipY);
-            ctx.lineTo(leftX, leftY);
-            ctx.lineTo(rightX, rightY);
-            ctx.closePath();
-            ctx.fillStyle = color;
-            ctx.fill();
-          }
+          ctx.moveTo(tipX, tipY);
+          ctx.lineTo(leftX, leftY);
+          ctx.lineTo(rightX, rightY);
+          ctx.closePath();
+          ctx.fillStyle = color;
+          ctx.fill();
         }
       }
     }
+  }
+}
+
 
     function draw() {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1897,18 +2249,20 @@ for (const key in springPairs) {
       }
 
       // Integrate bubbles
-      bubbles.forEach(b => {
-        if (draggingBubble === b && currentMode === MODES.MOVE) {
-          // direct placement in mousemove
-          b.vx = 0;
-          b.vy = 0;
-        } else {
-          b.x += b.vx * 0.08;
-          b.y += b.vy * 0.08;
-          b.vx *= DAMPING;
-          b.vy *= DAMPING;
-        }
-      });
+bubbles.forEach(b => {
+  if (draggingBubble === b && currentMode === MODES.MOVE) {
+    // Smooth follow toward the drag target, same style as nodes
+    b.x += (bubbleDragTarget.x - b.x) * 0.25;
+    b.y += (bubbleDragTarget.y - b.y) * 0.25;
+    b.vx = 0;
+    b.vy = 0;
+  } else {
+    b.x += b.vx * 0.08;
+    b.y += b.vy * 0.08;
+    b.vx *= DAMPING;
+    b.vy *= DAMPING;
+  }
+});
 
       draw();
       requestAnimationFrame(physics);
@@ -1947,7 +2301,7 @@ function setupSidebarSearch() {
     resultsEl.innerHTML = "";
     if (!q) return;
 
-    const matches = nodes.filter(n => {
+        const matches = nodes.filter(n => {
       if (n.type === "character") {
         const name = (n.data.name || "").toLowerCase();
         return name.includes(q);
@@ -1955,6 +2309,11 @@ function setupSidebarSearch() {
       if (n.type === "location") {
         const name = (n.data.name || "").toLowerCase();
         return name.includes(q);
+      }
+      if (n.type === "item") {
+        const name = (n.data.name || "").toLowerCase();
+        const type = (n.data.itemType || "").toLowerCase();
+        return name.includes(q) || type.includes(q);
       }
       if (n.type === "note") {
         const title = (n.data.title || "").toLowerCase();
@@ -1964,6 +2323,7 @@ function setupSidebarSearch() {
       return false;
     });
 
+
     matches.forEach(n => {
       const div = document.createElement("div");
       div.className = "search-result";
@@ -1972,16 +2332,20 @@ function setupSidebarSearch() {
       let displayName = "";
       let typeLabel = "";
 
-      if (n.type === "character") {
+            if (n.type === "character") {
         displayName = n.data.name || `Character #${n.id}`;
         typeLabel = "Character";
       } else if (n.type === "location") {
         displayName = n.data.name || `Location #${n.id}`;
         typeLabel = "Location";
+      } else if (n.type === "item") {
+        displayName = n.data.name || `Item #${n.id}`;
+        typeLabel = "Item";
       } else if (n.type === "note") {
         displayName = n.data.title || `Note #${n.id}`;
         typeLabel = "Note";
       }
+
 
       div.textContent = `${displayName} (${typeLabel})`;
 
@@ -2069,9 +2433,15 @@ function setupSidebarSearch() {
           <input id="char-name" value="${selectedNode.data.name || ""}">
         </div>
         <div class="field-group">
-          <label for="char-age">Age</label>
-          <input id="char-age" value="${selectedNode.data.age || ""}">
-        </div>
+  <label for="char-age">Age</label>
+  <input
+    id="char-age"
+    type="text"
+    inputmode="numeric"
+    pattern="[0-9]*"
+    value="${selectedNode.data.age || ""}"
+  >
+</div>
         <div class="field-group">
           <label for="char-dob">Date of Birth</label>
           <input id="char-dob" value="${selectedNode.data.dob || ""}">
@@ -2100,8 +2470,11 @@ function setupSidebarSearch() {
       selectedNode.data.name = e.target.value;
     });
     document.getElementById("char-age").addEventListener("input", e => {
-      selectedNode.data.age = e.target.value;
-    });
+  // strip everything that isn't 0–9
+  const cleaned = e.target.value.replace(/\D/g, "");
+  e.target.value = cleaned;
+  selectedNode.data.age = cleaned;
+});
     document.getElementById("char-dob").addEventListener("input", e => {
       selectedNode.data.dob = e.target.value;
     });
@@ -2123,38 +2496,99 @@ function setupSidebarSearch() {
 
   // === LOCATION SELECTED ===
   else if (selectedNode.type === "location") {
+  sidebar.innerHTML = `
+    <div>
+      <div class="pill">Location</div>
+      <h2>${selectedNode.data.name || "Location"}</h2>
+
+      <div class="field-group">
+        <label for="loc-name">Name</label>
+        <input id="loc-name" value="${selectedNode.data.name || ""}">
+      </div>
+
+      <div class="field-group">
+        <label for="loc-category">Type</label>
+        <select id="loc-category">
+          <option value="village"${selectedNode.data.category === "village" ? " selected" : ""}>Village</option>
+          <option value="town"${selectedNode.data.category === "town" ? " selected" : ""}>Town</option>
+          <option value="city"${selectedNode.data.category === "city" ? " selected" : ""}>City</option>
+          <option value="nature"${selectedNode.data.category === "nature" ? " selected" : ""}>Nature</option>
+          <option value="forest"${selectedNode.data.category === "forest" ? " selected" : ""}>Forest</option>
+          <option value="custom"${selectedNode.data.category === "custom" ? " selected" : ""}>Custom</option>
+        </select>
+      </div>
+
+      <div
+        class="field-group"
+        id="loc-custom-wrapper"
+        style="display:${selectedNode.data.category === 'custom' ? 'block' : 'none'}"
+      >
+        <label for="loc-custom">Custom type</label>
+        <input id="loc-custom" value="${selectedNode.data.customCategory || ""}">
+      </div>
+    </div>
+    ${sidebarSearchHTML()}
+  `;
+
+  document.getElementById("loc-name").addEventListener("input", e => {
+    selectedNode.data.name = e.target.value;
+  });
+
+  const catSelect = document.getElementById("loc-category");
+  const customWrapper = document.getElementById("loc-custom-wrapper");
+  const customInput = document.getElementById("loc-custom");
+
+  catSelect.addEventListener("change", e => {
+    selectedNode.data.category = e.target.value;
+    customWrapper.style.display = e.target.value === "custom" ? "block" : "none";
+  });
+
+  if (customInput) {
+    customInput.addEventListener("input", e => {
+      selectedNode.data.customCategory = e.target.value;
+    });
+  }
+
+  setupSidebarSearch();
+}
+  // === ITEM SELECTED ===
+  else if (selectedNode.type === "item") {
     sidebar.innerHTML = `
       <div>
-        <div class="pill">Location</div>
-        <h2>${selectedNode.data.name || "Location"}</h2>
+        <div class="pill">Item</div>
+        <h2>${selectedNode.data.name || "Item"}</h2>
 
         <div class="field-group">
-          <label for="loc-name">Name</label>
-          <input id="loc-name" value="${selectedNode.data.name || ""}">
+          <label for="item-name">Name</label>
+          <input id="item-name" value="${selectedNode.data.name || ""}">
         </div>
+
         <div class="field-group">
-          <label for="loc-category">Category</label>
-          <select id="loc-category">
-            <option value="town"${selectedNode.data.category === "town" ? " selected" : ""}>Town</option>
-            <option value="city"${selectedNode.data.category === "city" ? " selected" : ""}>City</option>
-            <option value="nature"${selectedNode.data.category === "nature" ? " selected" : ""}>Nature</option>
-            <option value="forest"${selectedNode.data.category === "forest" ? " selected" : ""}>Forest</option>
-            <option value="other"${selectedNode.data.category === "other" ? " selected" : ""}>Other</option>
-          </select>
+          <label for="item-type">Type</label>
+          <input id="item-type" value="${selectedNode.data.itemType || ""}">
+        </div>
+
+        <div class="field-group">
+          <label for="item-special">Special attributes</label>
+          <textarea id="item-special">${selectedNode.data.special || ""}</textarea>
         </div>
       </div>
       ${sidebarSearchHTML()}
     `;
 
-    document.getElementById("loc-name").addEventListener("input", e => {
+    document.getElementById("item-name").addEventListener("input", e => {
       selectedNode.data.name = e.target.value;
     });
-    document.getElementById("loc-category").addEventListener("change", e => {
-      selectedNode.data.category = e.target.value;
+    document.getElementById("item-type").addEventListener("input", e => {
+      selectedNode.data.itemType = e.target.value;
+    });
+    document.getElementById("item-special").addEventListener("input", e => {
+      selectedNode.data.special = e.target.value;
     });
 
     setupSidebarSearch();
   }
+
 
   // === NOTE SELECTED ===
   else {
@@ -2415,22 +2849,25 @@ function setupSidebarSearch() {
       const node = getNodeAtWorld(world.x, world.y);
 
             if (currentMode === MODES.MOVE) {
-        if (node) {
-          draggingNode = node;
-          draggingBubble = null;
-          dragTarget = { x: world.x, y: world.y };
-        } else {
-          const bubble = getBubbleAtWorld(world.x, world.y);
-          if (bubble) {
-            draggingBubble = bubble;
-            draggingNode = null;
-          } else {
-            draggingNode = null;
-            draggingBubble = null;
-            isPanning = true;
-            lastPanScreen = { x: sx, y: sy };
-          }
-        }
+          if (node) {
+      draggingNode = node;
+      draggingBubble = null;
+      dragTarget = { x: world.x, y: world.y };
+    } else {
+      const bubble = getBubbleAtWorld(world.x, world.y);
+      if (bubble) {
+        draggingBubble = bubble;
+        draggingNode = null;
+        // NEW: use a target so physics lerps it instead of snapping
+        bubbleDragTarget = { x: world.x, y: world.y };
+      } else {
+        draggingNode = null;
+        draggingBubble = null;
+        isPanning = true;
+        lastPanScreen = { x: sx, y: sy };
+      }
+    }
+
 
             } else if (currentMode === MODES.CONNECT) {
         if (node) {
@@ -2503,7 +2940,6 @@ function setupSidebarSearch() {
         } else {
           const bubble = getBubbleAtWorld(world.x, world.y);
           if (bubble) {
-            // If you *don’t* want bubble duplication, delete this block
             const bubbleCopy = {
               id: nextBubbleId++,
               name: (bubble.name || "Bubble") + " (copy)",
@@ -2519,6 +2955,60 @@ function setupSidebarSearch() {
             selectedNode = null;
             renderSidebar();
           }
+        }
+
+      // 🌐 NEW: AUTO CONNECT MODE
+      } else if (currentMode === MODES.AUTOCONNECT) {
+        if (node) {
+          const type = document.getElementById("connectionTypeSelect").value;
+          const center = node;
+          let createdCount = 0;
+
+          nodes.forEach(other => {
+            if (other.id === center.id) return;
+
+            const dx = other.x - center.x;
+            const dy = other.y - center.y;
+            const dist = Math.hypot(dx, dy);
+
+            if (dist > AUTO_CONNECT_RADIUS) return;
+
+            // Does this type already exist between A and B?
+            let existing = edges.find(
+              e =>
+                e.type === type &&
+                (
+                  (e.fromId === center.id && e.toId === other.id) ||
+                  (e.fromId === other.id && e.toId === center.id)
+                )
+            );
+
+            if (!existing) {
+              // Create one-way edge A → B
+              edges.push({
+                fromId: center.id,
+                toId: other.id,
+                type,
+                direction: "forward",
+              });
+              createdCount++;
+            } else {
+              // If the type already exists, upgrade to both-direction
+              if (existing.direction !== "both") {
+                existing.direction = "both";
+              }
+            }
+          });
+
+          normalizeEdges();
+
+          // keep the clicked node selected
+          selectedNode = center;
+          selectedBubble = null;
+          renderSidebar();
+
+          // Debug / optional feedback
+          console.log(`Auto Connect: created/updated links to ${createdCount} nodes.`);
         }
 
       } else if (currentMode === MODES.EXPLODE) {
@@ -2558,22 +3048,22 @@ function setupSidebarSearch() {
       const sx = e.clientX - rect.left;
       const sy = e.clientY - rect.top;
 
-      if (currentMode === MODES.MOVE) {
-        if (draggingNode) {
-          const world = screenToWorld(sx, sy);
-          dragTarget = { x: world.x, y: world.y };
-        } else if (draggingBubble) {
-          const world = screenToWorld(sx, sy);
-          draggingBubble.x = world.x;
-          draggingBubble.y = world.y;
-        } else if (isPanning) {
-          const dx = sx - lastPanScreen.x;
-          const dy = sy - lastPanScreen.y;
-          panX += dx;
-          panY += dy;
-          lastPanScreen = { x: sx, y: sy };
-        }
-      }
+        if (currentMode === MODES.MOVE) {
+    if (draggingNode) {
+      const world = screenToWorld(sx, sy);
+      dragTarget = { x: world.x, y: world.y };
+    } else if (draggingBubble) {
+      const world = screenToWorld(sx, sy);
+      // move the *target*, physics will pull the bubble toward it
+      bubbleDragTarget = { x: world.x, y: world.y };
+    } else if (isPanning) {
+      const dx = sx - lastPanScreen.x;
+      const dy = sy - lastPanScreen.y;
+      panX += dx;
+      panY += dy;
+      lastPanScreen = { x: sx, y: sy };
+    }
+  }
     });
 
     canvas.addEventListener("mouseup", () => {
