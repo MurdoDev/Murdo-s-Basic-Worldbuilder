@@ -698,6 +698,9 @@ body.fantasy-dark .search-block input::placeholder {
   <button class="mode-button" data-mode="autoconnect">
     <span class="icon">🗲</span><span>Auto Connect</span>
   </button>
+    <button class="mode-button" data-mode="isolate">
+    <span class="icon">⊘</span><span>Isolate</span>
+  </button>
 </div>
 
 
@@ -708,6 +711,7 @@ body.fantasy-dark .search-block input::placeholder {
         <option value="location">Location</option>
         <option value="item">Item</option>
         <option value="note">Note</option>
+        <option value="book">Book</option>
     </select>
       <button id="newNodeButton" class="small-btn">
         <span>➕</span><span>Create Node</span>
@@ -821,8 +825,8 @@ body.fantasy-dark .search-block input::placeholder {
     let panX = 0;
     let panY = 0;
     let scale = 1;
-    const MIN_SCALE = 0.3;
-    const MAX_SCALE = 5;
+    const MIN_SCALE = 0.2;
+    const MAX_SCALE = 2;
 
     const storedView = localStorage.getItem("nb_view");
     if (storedView) {
@@ -868,6 +872,7 @@ body.fantasy-dark .search-block input::placeholder {
   EXPLODE: "explode",
   DUPLICATE: "duplicate",
   AUTOCONNECT: "autoconnect",
+  ISOLATE: "isolate",
 };
 
 
@@ -886,12 +891,12 @@ body.fantasy-dark .search-block input::placeholder {
     };
 
     // Node-node repulsion radius (existing)
-    const BUBBLE_RADIUS = 200;
+    const BUBBLE_RADIUS = 190;
     const BUBBLE_FORCE = 40;
 
     // Bubble shell behaviour
     const BUBBLE_BASE_RADIUS = 160;
-    const BUBBLE_GROWTH_PER_NODE = 25;
+    const BUBBLE_GROWTH_PER_NODE = 17.5;
     const BUBBLE_INNER_STRENGTH = 400;
     const BUBBLE_OUTER_STRENGTH = 40;
     const BUBBLE_WALL_THICKNESS = 160;   // how wide the force ring is
@@ -915,10 +920,36 @@ body.fantasy-dark .search-block input::placeholder {
     let selectedBubble = null;
     let connectSourceNode = null;
 
-    const NODE_WIDTH = 140;
-    const NODE_HEIGHT = 80;
-    const NODE_RADIUS = 10;
-    const NODE_MAX_WIDTH = NODE_WIDTH * 4; // notes can grow up to 4× width
+  const NODE_WIDTH = 140;
+const NODE_HEIGHT = 80;
+const NODE_RADIUS = 20;
+const NODE_MAX_WIDTH = NODE_WIDTH * 3; // notes can grow up to this × width
+
+const NOTE_MAX_TITLE_CHARS   = 18;
+const NOTE_MAX_CONTENT_CHARS = 2700;
+
+const BOOK_TITLE_MAX_CHARS = 20;
+const BOOK_PAGE_MAX_CHARS  = 100;
+
+// === BOOK CONSTANTS ===
+const BOOK_CLOSED_HEIGHT = 200;
+const BOOK_CLOSED_WIDTH  = (BOOK_CLOSED_HEIGHT * 4) / 5; // closed (portrait)
+const BOOK_OPEN_HEIGHT   = BOOK_CLOSED_HEIGHT;
+const BOOK_OPEN_WIDTH    = BOOK_CLOSED_WIDTH * 2 + 20;   // 6x4 spread + small spine gap
+
+const BOOK_COVER_COLORS = [
+  "#1C1E4F", // deep indigo
+  "#601919", // dark red
+  "#36225A", // purple
+  "#203F31"  // deep green
+];
+
+const BOOK_MAX_PAGES = 30;
+
+
+
+// when note is at max width, cap body lines:
+const NOTE_MAX_BODY_LINES_AT_MAX_WIDTH = 16; // tweak to taste
 
 
     // ---- Autosave restore ----
@@ -1171,47 +1202,70 @@ body.fantasy-dark .search-block input::placeholder {
   if (node.type === "location") return node.data.name || "Location";
   if (node.type === "item") return node.data.name || "Item";
   if (node.type === "note") return node.data.title || "Note";
+  if (node.type === "book") return node.data.title || "Book";
   return "Node";
 }
 
 
+
     function createNode(type, x, y) {
-      let data = {};
-      if (type === "character") {
-        data = {
-          name: "New Character",
-          age: "",
-          dob: "",
-          species: "",
-          height: "",
-          weight: "",
-          gender: "",
-        };
-      } else if (type === "location") {
-        data = {
-          name: "New Location",
-          category: "town",
-          customCategory: "",
-          customCategory: ""
-        };
-      } else {
-        data = {
-          title: "New Note",
-          content: "",
-        };
-      }
-      const node = {
-        id: nextNodeId++,
-        type,
-        data,
-        x,
-        y,
-        vx: 0,
-        vy: 0,
-      };
-      nodes.push(node);
-      return node;
-    }
+  let data = {};
+  if (type === "character") {
+    data = {
+      name: "New Character",
+      age: "",
+      dob: "",
+      species: "",
+      height: "",
+      weight: "",
+      gender: "",
+    };
+  } else if (type === "location") {
+    data = {
+      name: "New Location",
+      category: "town",
+      customCategory: "",
+    };
+  } else if (type === "item") {
+    data = {
+      name: "New Item",
+      itemType: "",
+      special: "",
+    };
+    } else if (type === "note") {
+    data = {
+      title: "New Note",
+      content: "",
+    };
+  } else if (type === "book") {
+    data = {
+      title: "New Book",
+      coverColor: BOOK_COVER_COLORS[0],
+      pages: Array.from({ length: BOOK_MAX_PAGES }, () => ""),
+      currentPage: 0, // index 0–29
+    };
+  }
+
+
+    const node = {
+    id: nextNodeId++,
+    type,
+    data,
+    x,
+    y,
+    vx: 0,
+    vy: 0,
+    // collapsed by default for notes
+    isExpanded: type === "note" ? false : undefined,
+    // closed by default for books
+    isOpen: type === "book" ? false : undefined,
+  };
+
+
+  nodes.push(node);
+  return node;
+}
+
 
     function createBubble(x, y) {
       const bubble = {
@@ -1301,15 +1355,28 @@ body.fantasy-dark .search-block input::placeholder {
       }
     }
 function measureNoteLayout(n) {
-  // World-space padding & line height so the box scales with zoom
-  const paddingX = 16;
-  const paddingY = 12;
-  const lineHeight = 16;
+  // Screen-space padding and line height (convert to world via scale)
+  const paddingXpx = 16;
+  const paddingYpx = 12;
+  const lineHeightPx = 16;
 
-  // Fixed world width for notes (2× regular node width, tweak if desired)
-  const widthWorld = NODE_WIDTH * 2;
-  const innerWidthWorld = widthWorld - 2 * paddingX;
-  const innerWidthPx = innerWidthWorld; // treat world≈px for wrapping
+  const paddingX = paddingXpx / scale;
+  const paddingY = paddingYpx / scale;
+
+  const minWidthWorld = NODE_WIDTH;
+  // ORIGINAL:
+// const maxWidthWorld = NODE_MAX_WIDTH;
+
+// NEW: limit physical width when zoomed in
+let maxWidthWorld = NODE_MAX_WIDTH;
+
+// If zoomed in, convert a max pixel width to world units
+const MAX_ZOOMED_IN_WIDTH_PX = 900;   // tweak as needed
+if (scale > 1.25) {
+  const maxZoomedWorld = MAX_ZOOMED_IN_WIDTH_PX / scale;
+  maxWidthWorld = Math.min(maxWidthWorld, maxZoomedWorld);
+}
+
 
   const theme = getCurrentTheme();
   let labelFontFamily =
@@ -1318,387 +1385,831 @@ function measureNoteLayout(n) {
     labelFontFamily = "Georgia, 'Times New Roman', serif";
   }
 
-  const title = n.data.title || "Note";
-  const content = n.data.content || "";
+  const titleText   = (n.data.title   || "Note").trim();
+  const contentText = (n.data.content || "").trim();
+  const isExpanded  = !!n.isExpanded;
 
-  // Helper to wrap a single paragraph into lines
+  // 🔑 use the same pixel sizes as in drawRoundedNode
+  const TITLE_FONT_PX = 14;
+  const BODY_FONT_PX  = 12;
+  const HINT_FONT_PX  = 11;
+
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0); // measure in raw pixels
-  ctx.font = `13px ${labelFontFamily}`;
 
-    function wrapParagraph(text) {
-    const out = [];
+  const minInnerPx = (minWidthWorld - 2 * paddingX) * scale;
+  const maxInnerPx = (maxWidthWorld - 2 * paddingX) * scale;
+
+  // generic wrapper with a specific font size
+  function wrapInto(linesArr, text, maxPx, fontPx) {
+    ctx.font = `${fontPx}px ${labelFontFamily}`;
+
     if (!text) {
-      out.push("");
-      return out;
+      linesArr.push("");
+      return 0;
     }
 
-    const words = text.split(" ");
+    const words = text.split(/\s+/);
     let current = "";
+    let longest = 0;
 
-    function flushCurrent() {
+    function flush() {
       if (current) {
-        out.push(current);
+        linesArr.push(current);
+        const w = ctx.measureText(current).width;
+        if (w > longest) longest = w;
         current = "";
       }
     }
 
-    // Break a single too-long word into chunks that fit the width
     function breakLongWord(word) {
       let part = "";
       for (const ch of word) {
         const test = part + ch;
-        const testWidth = ctx.measureText(test).width;
-        if (testWidth <= innerWidthPx || !part) {
+        const w = ctx.measureText(test).width;
+        if (w <= maxPx || !part) {
           part = test;
         } else {
-          out.push(part);   // push full chunk
-          part = ch;        // start a new chunk
+          linesArr.push(part);
+          const pw = ctx.measureText(part).width;
+          if (pw > longest) longest = pw;
+          part = ch;
         }
       }
       if (part) {
-        out.push(part);
+        linesArr.push(part);
+        const pw = ctx.measureText(part).width;
+        if (pw > longest) longest = pw;
       }
     }
 
     for (const word of words) {
       const wordWidth = ctx.measureText(word).width;
-
-      // If a single word is too wide, break it into smaller chunks
-      if (wordWidth > innerWidthPx) {
-        flushCurrent();        // finish the current line first
-        breakLongWord(word);   // this may add multiple lines
+      if (wordWidth > maxPx) {
+        flush();
+        breakLongWord(word);
         continue;
       }
 
       const test = current ? current + " " + word : word;
       const testWidth = ctx.measureText(test).width;
 
-      if (testWidth <= innerWidthPx || !current) {
+      if (testWidth <= maxPx || !current) {
         current = test;
       } else {
-        flushCurrent();
+        flush();
         current = word;
       }
     }
-
-    flushCurrent();
-    return out;
+    flush();
+    return longest;
   }
 
+  // ---------- COLLAPSED ----------
 
-  // 1) Wrap the TITLE into its own lines
-  const titleLines = wrapParagraph(title);
+  if (!isExpanded) {
+    const collapsedLines = [];
 
-  // 2) Wrap CONTENT into body lines, with a blank line between title & body
-  const bodyLines = [];
-  if (content) {
-    const paras = content.split(/\n/);
+    // use a narrower limit so it never hits the curve
+    const titleMaxPx = maxInnerPx * 0.55;
+
+    const titleLinesTemp = [];
+    wrapInto(titleLinesTemp, titleText || "Note", titleMaxPx, TITLE_FONT_PX);
+
+    // collapsed: only one line, truncated with ellipsis
+    ctx.font = `${TITLE_FONT_PX}px ${labelFontFamily}`;
+    let firstLine = titleLinesTemp[0] || "Note";
+    while (
+      firstLine.length > 1 &&
+      ctx.measureText(firstLine).width > titleMaxPx
+    ) {
+      firstLine = firstLine.slice(0, -1);
+    }
+    if (titleLinesTemp.length > 1 && !firstLine.endsWith("…")) {
+      firstLine += "…";
+    }
+
+    collapsedLines.push(firstLine);
+
+    const hintLine = "(click to expand)";
+    ctx.font = `${HINT_FONT_PX}px ${labelFontFamily}`;
+    collapsedLines.push(hintLine);
+
+    ctx.font = `${TITLE_FONT_PX}px ${labelFontFamily}`;
+    const w1 = ctx.measureText(firstLine).width;
+
+    ctx.font = `${HINT_FONT_PX}px ${labelFontFamily}`;
+    const w2 = ctx.measureText(hintLine).width;
+
+    const longestPx = Math.max(w1, w2);
+
+    // Limit width when zoomed in (prevents super-wide stretched notes)
+const MAX_ZOOMED_IN_WIDTH_PX = 900; // tweak as needed
+
+let widthLimitPx = maxInnerPx;
+
+// When zoomed in, reduce width limit
+if (scale > 1.3) {
+  widthLimitPx = Math.min(widthLimitPx, MAX_ZOOMED_IN_WIDTH_PX);
+}
+
+const innerWidthPx = Math.min(
+  widthLimitPx,
+  Math.max(minInnerPx, longestPx)
+);
+
+    const innerWidthWorld = innerWidthPx / scale;
+
+    const lineHeightWorld = lineHeightPx / scale;
+    const totalLines = collapsedLines.length; // title + hint
+    const heightWorld =
+      totalLines * lineHeightWorld + 2 * paddingY;
+
+    n.layoutWidth     = innerWidthWorld + 2 * paddingX;
+    n.layoutHeight    = heightWorld;
+    n._noteTitleLines = [firstLine];
+    n._noteBodyLines  = [];
+    n._noteLineHeight = lineHeightWorld;
+    n._notePaddingY   = paddingY;
+
+    ctx.restore();
+    return;
+  }
+
+     // ---------- EXPANDED ----------
+
+  const titleLines = [];
+  const bodyLines  = [];
+
+  // same narrower limit for the title when expanded
+  const titleMaxPx = maxInnerPx * 0.55;
+
+  let longestPx = wrapInto(
+    titleLines,
+    titleText || "Note",
+    titleMaxPx,
+    TITLE_FONT_PX
+  );
+
+  if (contentText) {
+    const paras = contentText.split(/\n/);
     let firstPara = true;
     for (const para of paras) {
-      if (firstPara) {
-        // blank line between title and first body paragraph
-        bodyLines.push("");
-        firstPara = false;
-      } else {
-        // blank line between body paragraphs
-        bodyLines.push("");
+      if (!firstPara) {
+        bodyLines.push(""); // blank line between paragraphs
       }
-      if (!para.trim()) continue;
-      wrapParagraph(para).forEach(l => bodyLines.push(l));
+      firstPara = false;
+      longestPx = Math.max(
+        longestPx,
+        wrapInto(bodyLines, para, maxInnerPx, BODY_FONT_PX)
+      );
     }
   }
 
-  ctx.restore();
+  // 🔽 ZOOM-DEPENDENT LINE CAP
+  // When you're zoomed out (small scale), don't let the body become a tower.
+  if (scale < 0.85 && bodyLines.length > NOTE_MAX_BODY_LINES_AT_MAX_WIDTH) {
+    // keep only the first N lines
+    bodyLines.length = NOTE_MAX_BODY_LINES_AT_MAX_WIDTH;
 
-  const totalLines = titleLines.length + bodyLines.length;
-  const heightWorld = 2 * paddingY + totalLines * lineHeight;
+    // add an ellipsis to the last visible body line (if it has any text)
+    const lastIdx = bodyLines.length - 1;
+    if (lastIdx >= 0) {
+      let lastLine = bodyLines[lastIdx].replace(/\s+$/, "");
+      if (!lastLine.endsWith("…")) {
+        lastLine += " …";
+      }
+      bodyLines[lastIdx] = lastLine;
+    }
+  }
 
-  // Store world-space size so zoom affects it like other nodes
-  n.layoutWidth = widthWorld;
-  n.layoutHeight = heightWorld;
+  const innerWidthPx = Math.min(
+    maxInnerPx,
+    Math.max(minInnerPx, longestPx)
+  );
+  const innerWidthWorld = innerWidthPx / scale;
 
-  // Store layout info for drawing
+  const lineHeightWorld = lineHeightPx / scale;
+  const totalLines =
+    titleLines.length + bodyLines.length + 1; // +1 for hint "(click to collapse)"
+
+  const heightWorld =
+    totalLines * lineHeightWorld + 2 * paddingY;
+
+  n.layoutWidth     = innerWidthWorld + 2 * paddingX;
+  n.layoutHeight    = heightWorld;
   n._noteTitleLines = titleLines;
-  n._noteBodyLines = bodyLines;
-  n._noteLineHeight = lineHeight; // world units
-  n._notePaddingY = paddingY;     // world units
+  n._noteBodyLines  = bodyLines;
+  n._noteLineHeight = lineHeightWorld;
+  n._notePaddingY   = paddingY;
+
+  ctx.restore();
 }
 
+function measureBookLayout(n) {
+  const isOpen = !!n.isOpen;
 
+  if (isOpen) {
+    n.layoutWidth  = BOOK_OPEN_WIDTH;
+    n.layoutHeight = BOOK_OPEN_HEIGHT;
+  } else {
+    n.layoutWidth  = BOOK_CLOSED_WIDTH;
+    n.layoutHeight = BOOK_CLOSED_HEIGHT;
+  }
+}
+
+// Draw a single node (all types, including notes)
 
 function drawRoundedNode(n) {
+  // --- theme & fonts ---
   const theme = getCurrentTheme();
-
-  // Decide font family
   let labelFontFamily =
     "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
   if (theme === "fantasyLight" || theme === "fantasyDark") {
     labelFontFamily = "Georgia, 'Times New Roman', serif";
   }
 
-  // === LAYOUT: width/height ===
-  if (n.type === "note") {
-    // dynamic layout for notes
-    measureNoteLayout(n);
-  } else {
-    // fixed size for characters & locations
-    n.layoutWidth = NODE_WIDTH;
-    n.layoutHeight = NODE_HEIGHT;
-  }
+  let fillColor, strokeColor, mainColor, metaColor;
 
-  const w = n.layoutWidth || NODE_WIDTH;
-  const h = n.layoutHeight || NODE_HEIGHT;
-  const r = NODE_RADIUS;
-  const x = n.x - w / 2;
-  const y = n.y - h / 2;
-
-  // --- Rounded rect background ---
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-
-  let fill;
   if (theme === "fantasyLight") {
-    fill = "#fef6d8";
-    if (n === selectedNode) fill = "#F2DEA9";
-    if (n === connectSourceNode) fill = "#fee2e2";
-  } else if (theme === "fantasyDark") {
-    fill = "#1b130e";
-    if (n === selectedNode) fill = "#3F2C21";
-    if (n === connectSourceNode) fill = "#4b1111";
-  } else {
-    fill = darkMode ? "#020617" : "#ffffff";
-    if (n === selectedNode) fill = darkMode ? "#0f172a" : "#dbeafe";
-    if (n === connectSourceNode) fill = darkMode ? "#172554" : "#fee2e2";
-  }
-
-  ctx.fillStyle = fill;
-  ctx.fill();
-
-  let strokeColor;
-  if (theme === "fantasyLight") {
-    strokeColor = "#8b5a30";
-  } else if (theme === "fantasyDark") {
-    strokeColor = "#f5e6c4";
-  } else {
-    strokeColor = darkMode ? "#e5e7eb" : "#111827";
-  }
-  ctx.strokeStyle = strokeColor;
-  ctx.lineWidth = 1.2 / scale;
-  ctx.stroke();
-
-  // --- Text setup ---
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-
-  // Base color for main label
-  let mainColor;
-  if (theme === "fantasyDark") {
-    mainColor = "#f5e6c4";
-  } else if (theme === "fantasyLight") {
+    fillColor = "#f6ecd1";
+    strokeColor = "#b08c3d";
     mainColor = "#3b2f2f";
-  } else {
-    mainColor = darkMode ? "#f9fafb" : "#111827";
-  }
-
-  // Slightly faded version for subtext
-  let metaColor;
-  if (theme === "fantasyDark") {
+    metaColor = "rgba(59,47,47,0.7)";
+  } else if (theme === "fantasyDark") {
+    fillColor = "#24160f";
+    strokeColor = "#d7be82";
+    mainColor = "#f5e6c4";
     metaColor = "rgba(245,230,196,0.7)";
-  } else if (theme === "fantasyLight") {
-    metaColor = "rgba(59,47,47,0.6)";
   } else if (darkMode) {
-    metaColor = "rgba(249,250,251,0.65)";
+    fillColor = "#020617";
+    strokeColor = "#4b5563";
+    mainColor = "#e5e7eb";
+    metaColor = "#9ca3af";
   } else {
-    metaColor = "rgba(17,24,39,0.6)";
+    fillColor = "#ffffff";
+    strokeColor = "#d1d5db";
+    mainColor = "#111827";
+    metaColor = "#6b7280";
   }
 
-      // === NOTE NODES: title + body, unlimited vertical ===
+  // ---------- NOTES (handled first, then return) ----------
   if (n.type === "note") {
-    const titleLines = n._noteTitleLines || [n.data.title || "Note"];
-    const bodyLines  = n._noteBodyLines || [];
-    const lineHeightWorld = n._noteLineHeight || 16;  // world units
-    const paddingY       = n._notePaddingY || 12;     // world units
+    // ensure layout
+    measureNoteLayout(n);
+    const w = n.layoutWidth || NODE_WIDTH;
+    const h = n.layoutHeight || NODE_HEIGHT;
 
-    const hBox = n.layoutHeight || NODE_HEIGHT;
-    let yText = n.y - hBox / 2 + paddingY;
+    // clamp radius so arcs don't overlap
+    let r = NODE_RADIUS;
+    const maxR = Math.min(w / 2, h / 2);
+    if (r > maxR) r = maxR;
 
-    // --- Title: ALL wrapped lines stay title style ---
+    const left = n.x - w / 2;
+    const top = n.y - h / 2;
+    const right = n.x + w / 2;
+    const bottom = n.y + h / 2;
+
+    // background
+    ctx.beginPath();
+    ctx.moveTo(left + r, top);
+    ctx.lineTo(right - r, top);
+    ctx.quadraticCurveTo(right, top, right, top + r);
+    ctx.lineTo(right, bottom - r);
+    ctx.quadraticCurveTo(right, bottom, right - r, bottom);
+    ctx.lineTo(left + r, bottom);
+    ctx.quadraticCurveTo(left, bottom, left, bottom - r);
+    ctx.lineTo(left, top + r);
+    ctx.quadraticCurveTo(left, top, left + r, top);
+
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+    ctx.lineWidth = 2 / scale;
+    ctx.strokeStyle = strokeColor;
+    ctx.stroke();
+
+    // text layout data from measureNoteLayout
+    const isExpanded      = !!n.isExpanded;
+    const titleLines      = n._noteTitleLines || [n.data.title || "Note"];
+    const bodyLines       = n._noteBodyLines || [];
+    const lineHeightWorld = n._noteLineHeight || (16 / scale);
+    const paddingY        = n._notePaddingY   || (12 / scale);
+    const boxHeight       = n.layoutHeight    || NODE_HEIGHT;
+
+    let yText = n.y - boxHeight / 2 + paddingY;
+
+    const titleFontPx = 14 / scale;
+    const bodyFontPx  = 12 / scale;
+    const hintFontPx  = 11 / scale;
+
+    let bodyColor;
+    if (theme === "fantasyDark") {
+      bodyColor = "rgba(245,230,196,0.70)";
+    } else if (theme === "fantasyLight") {
+      bodyColor = "rgba(59,47,47,0.65)";
+    } else if (darkMode) {
+      bodyColor = "rgba(229,231,235,0.75)";
+    } else {
+      bodyColor = "rgba(17,24,39,0.70)";
+    }
+
+    let hintColor;
+    if (theme === "fantasyDark") {
+      hintColor = "rgba(245,230,196,0.55)";
+    } else if (theme === "fantasyLight") {
+      hintColor = "rgba(59,47,47,0.55)";
+    } else if (darkMode) {
+      hintColor = "rgba(229,231,235,0.55)";
+    } else {
+      hintColor = "rgba(17,24,39,0.45)";
+    }
+
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
-    ctx.font = `${13 / scale}px ${labelFontFamily}`;
+
+    // title
+    ctx.font = `${titleFontPx}px ${labelFontFamily}`;
     ctx.fillStyle = mainColor;
     titleLines.forEach(line => {
       ctx.fillText(line, n.x, yText);
       yText += lineHeightWorld;
     });
 
-    // --- Body: smaller & softer style ---
-    if (bodyLines.length) {
-      const themeNow = getCurrentTheme();
-      ctx.font = `${11.5 / scale}px ${labelFontFamily}`;
-      if (themeNow === "fantasyDark") {
-        ctx.fillStyle = "rgba(245,230,196,0.70)";
-      } else if (themeNow === "fantasyLight") {
-        ctx.fillStyle = "rgba(59,47,47,0.65)";
-      } else if (darkMode) {
-        ctx.fillStyle = "rgba(229,231,235,0.65)";
-      } else {
-        ctx.fillStyle = "rgba(17,24,39,0.55)";
-      }
-
+    // body
+    if (isExpanded && bodyLines.length) {
+      ctx.font = `${bodyFontPx}px ${labelFontFamily}`;
+      ctx.fillStyle = bodyColor;
       bodyLines.forEach(line => {
         ctx.fillText(line, n.x, yText);
         yText += lineHeightWorld;
       });
     }
 
-    return; // done for notes
+    // hint
+    ctx.font = `italic ${hintFontPx}px ${labelFontFamily}`;
+    ctx.fillStyle = hintColor;
+    const hintText = isExpanded ? "(click to collapse)" : "(click to expand)";
+    ctx.fillText(hintText, n.x, yText);
+
+    return;
   }
 
+  // ---------- BOOKS ----------
+  if (n.type === "book") {
+    // layout
+    measureBookLayout(n);
+    const w = n.layoutWidth || BOOK_CLOSED_WIDTH;
+    const h = n.layoutHeight || BOOK_CLOSED_HEIGHT;
 
+    const isOpen = !!n.isOpen;
+    const left = n.x - w / 2;
+    const top = n.y - h / 2;
+    const right = n.x + w / 2;
+    const bottom = n.y + h / 2;
 
+    const coverColor = n.data.coverColor || BOOK_COVER_COLORS[0];
+    const gold = "#d7be82";
+    const stitchesColor = "rgba(215,190,130,0.9)";
+    const title = n.data.title || "Book";
 
-  // Helper for wrapping non-note text
-  const maxWidth = w - 20;
-  const lineHeight = 15 / scale;
-  const maxLines = 3;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
 
-  function wrapAndTruncateText(text, maxWidth, maxLines) {
-  ctx.font = `${13 / scale}px ${labelFontFamily}`;
+    // helper for rounded rect
+    function roundedRectPath(x1, y1, x2, y2, r) {
+      const width = x2 - x1;
+      const height = y2 - y1;
+      const maxR = Math.min(width / 2, height / 2);
+      if (r > maxR) r = maxR;
 
-  if (!text) return [];
+      ctx.beginPath();
+      ctx.moveTo(x1 + r, y1);
+      ctx.lineTo(x2 - r, y1);
+      ctx.quadraticCurveTo(x2, y1, x2, y1 + r);
+      ctx.lineTo(x2, y2 - r);
+      ctx.quadraticCurveTo(x2, y2, x2 - r, y2);
+      ctx.lineTo(x1 + r, y2);
+      ctx.quadraticCurveTo(x1, y2, x1, y2 - r);
+      ctx.lineTo(x1, y1 + r);
+      ctx.quadraticCurveTo(x1, y1, x1 + r, y1);
+    }
 
-  const words = text.split(/\s+/);
-  const lines = [];
-  let current = "";
+    // --- CLOSED BOOK ---
+    if (!isOpen) {
+      // cover
+      roundedRectPath(left, top, right, bottom, NODE_RADIUS);
+      ctx.fillStyle = coverColor;
+      ctx.fill();
+      ctx.lineWidth = 2 / scale;
+      ctx.strokeStyle = "#00000033";
+      ctx.stroke();
 
-  function pushLine(line) {
-    if (line !== "") lines.push(line);
-  }
+      // stitches inset
+      const inset = 10;
+      const sLeft = left + inset;
+      const sTop = top + inset;
+      const sRight = right - inset;
+      const sBottom = bottom - inset;
 
-  for (const word of words) {
-    const wordWidth = ctx.measureText(word).width;
+      roundedRectPath(sLeft, sTop, sRight, sBottom, NODE_RADIUS * 0.7);
+      ctx.setLineDash([6 / scale, 4 / scale]);
+      ctx.strokeStyle = stitchesColor;
+      ctx.lineWidth = 1.5 / scale;
+      ctx.stroke();
+      ctx.setLineDash([]);
 
-    // If the word itself is too long to fit on a single line,
-    // we split it into chunks that fit maxWidth.
-    if (wordWidth > maxWidth) {
-      // Flush current line first
-      if (current) {
-        pushLine(current);
-        current = "";
+      // gold title
+      ctx.fillStyle = gold;
+      const baseTitlePx = 14 / scale;
+      ctx.font = `${baseTitlePx}px ${labelFontFamily}`;
+      ctx.fillText(title, n.x, (top + bottom) / 2);
+
+      // tiny hint at bottom
+      const hintPx = 9 / scale;
+      ctx.font = `italic ${hintPx}px ${labelFontFamily}`;
+      ctx.fillText("(click to open)", n.x, bottom - 12 / scale);
+
+      return;
+    }
+
+        // --- OPEN BOOK (double spread) ---
+
+    // covers behind pages (left and right halves)
+    const midX = n.x;
+    const halfW = w / 2;
+
+    // left cover
+    roundedRectPath(left, top, midX, bottom, NODE_RADIUS);
+    ctx.fillStyle = coverColor;
+    ctx.fill();
+    ctx.lineWidth = 2 / scale;
+    ctx.strokeStyle = "#00000055";
+    ctx.stroke();
+
+    // right cover
+    roundedRectPath(midX, top, right, bottom, NODE_RADIUS);
+    ctx.fillStyle = coverColor;
+    ctx.fill();
+    ctx.strokeStyle = "#00000055";
+    ctx.stroke();
+
+    // page rectangle slightly inset so covers are visible
+    const pageMargin = 12;
+    const pageLeft = left + pageMargin;
+    const pageTop = top + pageMargin;
+    const pageRight = right - pageMargin;
+    const pageBottom = bottom - pageMargin;
+
+    roundedRectPath(pageLeft, pageTop, pageRight, pageBottom, NODE_RADIUS * 0.5);
+
+    let pageColor;
+    if (theme === "fantasyLight") {
+      pageColor = "#f9f1da";
+    } else if (theme === "fantasyDark") {
+      pageColor = "#332017";
+    } else if (darkMode) {
+      pageColor = "#0f172a";
+    } else {
+      pageColor = "#fdfaf5";
+    }
+
+    ctx.fillStyle = pageColor;
+    ctx.fill();
+    ctx.lineWidth = 1.5 / scale;
+    ctx.strokeStyle = "rgba(0,0,0,0.2)";
+    ctx.stroke();
+
+    // central fold
+    ctx.beginPath();
+    ctx.moveTo(midX, pageTop + 4 / scale);
+    ctx.lineTo(midX, pageBottom - 4 / scale);
+    ctx.strokeStyle = "rgba(0,0,0,0.18)";
+    ctx.lineWidth = 1 / scale;
+    ctx.stroke();
+
+    // stitching along the inner margin (dotted gold)
+    ctx.setLineDash([5 / scale, 4 / scale]);
+    ctx.beginPath();
+    ctx.moveTo(midX - 6 / scale, pageTop + 6 / scale);
+    ctx.lineTo(midX - 6 / scale, pageBottom - 6 / scale);
+    ctx.moveTo(midX + 6 / scale, pageTop + 6 / scale);
+    ctx.lineTo(midX + 6 / scale, pageBottom - 6 / scale);
+    ctx.strokeStyle = stitchesColor;
+    ctx.lineWidth = 1 / scale;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // book title at top center (gold)
+    const titlePx = 13 / scale;
+    ctx.font = `${titlePx}px ${labelFontFamily}`;
+    ctx.fillStyle = gold;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText(title, n.x, pageTop + 6 / scale);
+
+    // page number (no "(edit in sidebar)" anymore)
+    const currIndex = Math.max(0, Math.min((n.data.currentPage ?? 0), BOOK_MAX_PAGES - 1));
+    const pageLabel = `Page ${currIndex + 1} / ${BOOK_MAX_PAGES}`;
+    const hintPx = 9 / scale;
+    ctx.font = `italic ${hintPx}px ${labelFontFamily}`;
+    ctx.fillStyle = metaColor;
+    ctx.textAlign = "left";
+    ctx.fillText(pageLabel, pageLeft + 8 / scale, pageBottom - 14 / scale);
+
+    // 🔹 Two separate page text boxes, left-aligned
+    if (Array.isArray(n.data.pages)) {
+      // left page index = currentPage
+      const leftIdx = currIndex;
+      // right page index = currentPage + 1 (clamped)
+      const rightIdx = Math.min(leftIdx + 1, BOOK_MAX_PAGES - 1);
+
+      const leftText  = n.data.pages[leftIdx]  || "";
+      const rightText = n.data.pages[rightIdx] || "";
+
+      // helper to wrap text
+      function wrapLines(text, maxWidthPx, maxLines) {
+        ctx.textBaseline = "top";
+        const lines = [];
+        if (!text) return lines;
+        const words = text.split(/\s+/);
+        let current = "";
+
+        function pushLine(line) {
+          if (line !== "") lines.push(line);
+        }
+
+        for (const wWord of words) {
+          const test = current ? current + " " + wWord : wWord;
+          if (ctx.measureText(test).width <= maxWidthPx || !current) {
+            current = test;
+          } else {
+            pushLine(current);
+            current = wWord;
+          }
+        }
+        if (current) pushLine(current);
+
+        if (lines.length > maxLines) {
+          lines.length = maxLines;
+          lines[maxLines - 1] = lines[maxLines - 1] + " …";
+        }
+        return lines;
       }
 
+      // text styling
+      const bodyPx = 11 / scale;
+      ctx.font = `${bodyPx}px ${labelFontFamily}`;
+      ctx.fillStyle = (
+        theme === "fantasyDark" ? "rgba(245,230,196,0.85)" :
+        theme === "fantasyLight" ? "rgba(59,47,47,0.85)" :
+        darkMode ? "rgba(229,231,235,0.9)" :
+        "rgba(17,24,39,0.8)"
+      );
+      ctx.textAlign = "left";
+
+      // geometry for each page’s text box
+      const innerMargin = 12 / scale;
+      const textTop = pageTop + 26 / scale;
+      const lineHeightWorld = 14 / scale;
+      const lineHeightPx = lineHeightWorld * scale;
+
+      // LEFT PAGE BOX
+      const leftBoxLeft = pageLeft + innerMargin;
+      const leftBoxRight = midX - innerMargin;
+      const leftBoxWidthWorld = leftBoxRight - leftBoxLeft;
+      const leftMaxWidthPx = leftBoxWidthWorld * scale;
+
+      const leftLines = wrapLines(leftText, leftMaxWidthPx, 10);
+      let yLeft = textTop;
+      leftLines.forEach(line => {
+        ctx.fillText(line, leftBoxLeft, yLeft);
+        yLeft += lineHeightPx;
+      });
+
+      // RIGHT PAGE BOX
+      const rightBoxLeft = midX + innerMargin;
+      const rightBoxRight = pageRight - innerMargin;
+      const rightBoxWidthWorld = rightBoxRight - rightBoxLeft;
+      const rightMaxWidthPx = rightBoxWidthWorld * scale;
+
+      const rightLines = wrapLines(rightText, rightMaxWidthPx, 10);
+      let yRight = textTop;
+      rightLines.forEach(line => {
+        ctx.fillText(line, rightBoxLeft, yRight);
+        yRight += lineHeightPx;
+      });
+    }
+
+    return;
+  }
+
+  // ---------- EVERYONE ELSE (character, location, item, default) ----------
+
+  // ensure layout size
+  n.layoutWidth = NODE_WIDTH;
+  n.layoutHeight = NODE_HEIGHT;
+
+  const w = n.layoutWidth || NODE_WIDTH;
+  const h = n.layoutHeight || NODE_HEIGHT;
+
+  // clamp radius
+  let r = NODE_RADIUS;
+  const maxR = Math.min(w / 2, h / 2);
+  if (r > maxR) r = maxR;
+
+  const left = n.x - w / 2;
+  const top = n.y - h / 2;
+  const right = n.x + w / 2;
+  const bottom = n.y + h / 2;
+
+  // outer rounded rect
+  ctx.beginPath();
+  ctx.moveTo(left + r, top);
+  ctx.lineTo(right - r, top);
+  ctx.quadraticCurveTo(right, top, right, top + r);
+  ctx.lineTo(right, bottom - r);
+  ctx.quadraticCurveTo(right, bottom, right - r, bottom);
+  ctx.lineTo(left + r, bottom);
+  ctx.quadraticCurveTo(left, bottom, left, bottom - r);
+  ctx.lineTo(left, top + r);
+  ctx.quadraticCurveTo(left, top, left + r, top);
+
+  ctx.fillStyle = fillColor;
+  ctx.fill();
+  ctx.lineWidth = 2 / scale;
+  ctx.strokeStyle = strokeColor;
+  ctx.stroke();
+
+  const maxWidth = w - 20;
+  const zoomedOut = scale < 0.85;
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  function wrapAndTruncateText(text, maxWidthPx, maxLinesLocal) {
+    ctx.font = `${13 / scale}px ${labelFontFamily}`;
+
+    if (!text) return [];
+
+    const words = text.split(/\s+/);
+    const lines = [];
+    let current = "";
+
+    function pushLine(line) {
+      if (line !== "") lines.push(line);
+    }
+
+    function breakLongWord(word) {
       let part = "";
       for (const ch of word) {
         const test = part + ch;
-        if (ctx.measureText(test).width <= maxWidth) {
+        if (ctx.measureText(test).width <= maxWidthPx || !part) {
           part = test;
         } else {
-          // push full part and start a new one
-          pushLine(part);
+          lines.push(part);
           part = ch;
         }
       }
-      if (part) {
-        // start new current line with the leftover part
-        current = part;
+      if (part) lines.push(part);
+    }
+
+    for (const word of words) {
+      const wordWidth = ctx.measureText(word).width;
+      if (wordWidth > maxWidthPx) {
+        if (current) {
+          pushLine(current);
+          current = "";
+        }
+        breakLongWord(word);
+        continue;
       }
-    } else {
-      // Normal wrapping with spaces
+
       const test = current ? current + " " + word : word;
-      if (ctx.measureText(test).width <= maxWidth) {
+      if (ctx.measureText(test).width <= maxWidthPx || !current) {
         current = test;
       } else {
         pushLine(current);
         current = word;
       }
     }
+    if (current) pushLine(current);
+
+    if (lines.length <= maxLinesLocal) return lines;
+
+    const truncated = lines.slice(0, maxLinesLocal);
+    let last = truncated[maxLinesLocal - 1];
+
+    while (last.length > 0 && ctx.measureText(last + "…").width > maxWidthPx) {
+      last = last.slice(0, -1);
+    }
+
+    truncated[maxLinesLocal - 1] = last + "…";
+    return truncated;
   }
 
-  if (current) pushLine(current);
+  function shrinkSingleLine(text, baseFontPx, minFontPx, maxWidthPx) {
+    if (!text) return { text: "", fontPx: baseFontPx };
 
-  // If everything fits in the allowed lines, return as is
-  if (lines.length <= maxLines) return lines;
+    let fontPx = baseFontPx;
+    ctx.font = `${fontPx}px ${labelFontFamily}`;
 
-  // Truncate to maxLines and add "…" at the end of the last one
-  const truncated = lines.slice(0, maxLines);
-  let last = truncated[maxLines - 1];
+    if (ctx.measureText(text).width <= maxWidthPx) {
+      return { text, fontPx };
+    }
 
-  while (last.length > 0 && ctx.measureText(last + "…").width > maxWidth) {
-    last = last.slice(0, -1);
+    while (fontPx > minFontPx) {
+      fontPx -= 1;
+      ctx.font = `${fontPx}px ${labelFontFamily}`;
+      if (ctx.measureText(text).width <= maxWidthPx) {
+        return { text, fontPx };
+      }
+    }
+
+    let t = text;
+    const ell = "…";
+    while (t.length > 1 && ctx.measureText(t + ell).width > maxWidthPx) {
+      t = t.slice(0, -1);
+    }
+    return { text: t + ell, fontPx };
   }
 
-  truncated[maxLines - 1] = last + "…";
-  return truncated;
-}
+  function drawNameOnly(label) {
+    const text = label || nodeDisplayLabel(n);
+    const baseFontSize = 13 / scale;
+    const minFontSize  = 9 / scale;
+    const fitted = shrinkSingleLine(text, baseFontSize, minFontSize, maxWidth);
+    const centerY = n.y;
 
+    ctx.font = `${fitted.fontPx}px ${labelFontFamily}`;
+    ctx.fillStyle = mainColor;
+    ctx.fillText(fitted.text, n.x, centerY);
+  }
 
-  // === CHARACTER NODES: Name + Species + Gender ===
+  // characters
   if (n.type === "character") {
-  const name = n.data.name || "Character";
-  const species = n.data.species || "";
-  const gender = n.data.gender || "";
+    const name    = n.data.name    || "Character";
+    const species = n.data.species || "";
+    const gender  = n.data.gender  || "";
 
-  const nameFontSize = 13 / scale;
-  const metaFontSize = 11 / scale;
-  const nameLineHeight = 15 / scale;
-  const metaLineHeight = 13 / scale;
+    if (zoomedOut) {
+      drawNameOnly(name);
+      return;
+    }
 
-  // --- NEW: different line limits ---
-  const nameLines = wrapAndTruncateText(name, maxWidth, 3);
-  const speciesLines = species ? wrapAndTruncateText(species, maxWidth, 2) : [];
-  const genderLines = gender ? wrapAndTruncateText(gender, maxWidth, 1) : [];
+    const baseNameFontSize = 15 / scale;
+    const minNameFontSize  = 10 / scale;
+    const metaFontSize     = 10 / scale;
+    const metaLineHeight   = 13 / scale;
 
-  const totalHeight =
-    nameLines.length * nameLineHeight +
-    speciesLines.length * metaLineHeight +
-    genderLines.length * metaLineHeight;
+    const fitted = shrinkSingleLine(
+      name,
+      baseNameFontSize,
+      minNameFontSize,
+      maxWidth
+    );
+    const nameLineHeight = fitted.fontPx * 1.15;
 
-  let yText = n.y - totalHeight / 2;
+    const speciesLines = species ? wrapAndTruncateText(species, maxWidth, 2) : [];
+    const genderLines  = gender  ? wrapAndTruncateText(gender,  maxWidth, 1) : [];
 
-  // --- Name (3 lines max) ---
-  ctx.font = `${nameFontSize}px ${labelFontFamily}`;
-  ctx.fillStyle = mainColor;
-  nameLines.forEach(line => {
-    ctx.fillText(line, n.x, yText);
+    const totalHeight =
+      nameLineHeight +
+      speciesLines.length * metaLineHeight +
+      genderLines.length * metaLineHeight;
+
+    let yText = n.y - totalHeight / 2;
+
+    ctx.font = `${fitted.fontPx}px ${labelFontFamily}`;
+    ctx.fillStyle = mainColor;
+    ctx.fillText(fitted.text, n.x, yText);
     yText += nameLineHeight;
-  });
 
-  // --- Species (2 lines max) ---
-  ctx.font = `italic ${metaFontSize}px ${labelFontFamily}`;
-  ctx.fillStyle = metaColor;
-  speciesLines.forEach(line => {
-    ctx.fillText(line, n.x, yText);
-    yText += metaLineHeight;
-  });
+    ctx.font = `italic ${metaFontSize}px ${labelFontFamily}`;
+    ctx.fillStyle = metaColor;
+    speciesLines.forEach(line => {
+      ctx.fillText(line, n.x, yText);
+      yText += metaLineHeight;
+    });
 
-  // --- Gender (1 line max) ---
-  ctx.font = `${metaFontSize}px ${labelFontFamily}`;
-  ctx.fillStyle = metaColor;
-  genderLines.forEach(line => {
-    ctx.fillText(line, n.x, yText);
-    yText += metaLineHeight;
-  });
+    ctx.font = `${metaFontSize}px ${labelFontFamily}`;
+    ctx.fillStyle = metaColor;
+    genderLines.forEach(line => {
+      ctx.fillText(line, n.x, yText);
+      yText += metaLineHeight;
+    });
 
-  return;
-}
+    return;
+  }
 
-
-   // === LOCATION NODES: Name + Type under it ===
+  // locations
   if (n.type === "location") {
     const name = n.data.name || "Location";
 
-    // Compute pretty type string
+    if (zoomedOut) {
+      drawNameOnly(name);
+      return;
+    }
+
     let rawCat = n.data.category || "";
     let prettyType = "";
     if (rawCat === "custom" && n.data.customCategory) {
@@ -1707,31 +2218,34 @@ function drawRoundedNode(n) {
       prettyType = rawCat.charAt(0).toUpperCase() + rawCat.slice(1);
     }
 
-    const nameFontSize = 13 / scale;
-    const typeFontSize = 11 / scale;
-    const nameLineHeight = 15 / scale;
-    const typeLineHeight = 13 / scale;
+    const baseNameFontSize = 13 / scale;
+    const minNameFontSize  = 9 / scale;
+    const typeFontSize     = 11 / scale;
+    const typeLineHeight   = 13 / scale;
 
-    const nameLines = wrapAndTruncateText(name, maxWidth, 3);
+    const fitted = shrinkSingleLine(
+      name,
+      baseNameFontSize,
+      minNameFontSize,
+      maxWidth
+    );
+    const nameLineHeight = fitted.fontPx * 1.15;
+
     const typeLines = prettyType
       ? wrapAndTruncateText(prettyType, maxWidth, 2)
       : [];
 
     const totalHeight =
-      nameLines.length * nameLineHeight +
+      nameLineHeight +
       typeLines.length * typeLineHeight;
 
     let yText = n.y - totalHeight / 2;
 
-    // Name
-    ctx.font = `${nameFontSize}px ${labelFontFamily}`;
+    ctx.font = `${fitted.fontPx}px ${labelFontFamily}`;
     ctx.fillStyle = mainColor;
-    nameLines.forEach(line => {
-      ctx.fillText(line, n.x, yText);
-      yText += nameLineHeight;
-    });
+    ctx.fillText(fitted.text, n.x, yText);
+    yText += nameLineHeight;
 
-    // Type (small, duller)
     if (typeLines.length) {
       ctx.font = `italic ${typeFontSize}px ${labelFontFamily}`;
       ctx.fillStyle = metaColor;
@@ -1744,36 +2258,44 @@ function drawRoundedNode(n) {
     return;
   }
 
-  // === ITEM NODES: Name + Type under it ===
+  // items
   if (n.type === "item") {
-    const name = n.data.name || "Item";
+    const name      = n.data.name     || "Item";
     const typeLabel = n.data.itemType || "";
 
-    const nameFontSize = 13 / scale;
-    const typeFontSize = 11 / scale;
-    const nameLineHeight = 15 / scale;
-    const typeLineHeight = 13 / scale;
+    if (zoomedOut) {
+      drawNameOnly(name);
+      return;
+    }
 
-    const nameLines = wrapAndTruncateText(name, maxWidth, 3);
+    const baseNameFontSize = 13 / scale;
+    const minNameFontSize  = 9 / scale;
+    const typeFontSize     = 11 / scale;
+    const typeLineHeight   = 13 / scale;
+
+    const fitted = shrinkSingleLine(
+      name,
+      baseNameFontSize,
+      minNameFontSize,
+      maxWidth
+    );
+    const nameLineHeight = fitted.fontPx * 1.15;
+
     const typeLines = typeLabel
       ? wrapAndTruncateText(typeLabel, maxWidth, 2)
       : [];
 
     const totalHeight =
-      nameLines.length * nameLineHeight +
+      nameLineHeight +
       typeLines.length * typeLineHeight;
 
     let yText = n.y - totalHeight / 2;
 
-    // Name
-    ctx.font = `${nameFontSize}px ${labelFontFamily}`;
+    ctx.font = `${fitted.fontPx}px ${labelFontFamily}`;
     ctx.fillStyle = mainColor;
-    nameLines.forEach(line => {
-      ctx.fillText(line, n.x, yText);
-      yText += nameLineHeight;
-    });
+    ctx.fillText(fitted.text, n.x, yText);
+    yText += nameLineHeight;
 
-    // Type under it
     if (typeLines.length) {
       ctx.font = `italic ${typeFontSize}px ${labelFontFamily}`;
       ctx.fillStyle = metaColor;
@@ -1785,19 +2307,34 @@ function drawRoundedNode(n) {
 
     return;
   }
-  // === DEFAULT (notes already handled above): simple label, 3 lines max ===
+
+  // default node type
   const label = nodeDisplayLabel(n);
-  ctx.font = `${13 / scale}px ${labelFontFamily}`;
-  ctx.fillStyle = mainColor;
 
-  const lines = wrapAndTruncateText(label, maxWidth, maxLines);
-  const totalHeightDefault = lines.length * lineHeight;
-  let startY = n.y - totalHeightDefault / 2;
-
-  for (let i = 0; i < lines.length; i++) {
-    ctx.fillText(lines[i], n.x, startY + i * lineHeight);
+  if (zoomedOut) {
+    drawNameOnly(label);
+    return;
   }
+
+  const baseFontSize = 13 / scale;
+  const minFontSize  = 9 / scale;
+  const fitted = shrinkSingleLine(
+    label,
+    baseFontSize,
+    minFontSize,
+    maxWidth
+  );
+  const lineHeight = fitted.fontPx * 1.15;
+
+  const totalHeightDefault = lineHeight;
+  const startY = n.y - totalHeightDefault / 2;
+
+  ctx.font = `${fitted.fontPx}px ${labelFontFamily}`;
+  ctx.fillStyle = mainColor;
+  ctx.fillText(fitted.text, n.x, startY);
 }
+
+
 
 
     function drawBubbles() {
@@ -2112,8 +2649,25 @@ function drawRoundedNode(n) {
         if (typeof b.radius !== "number") b.radius = BUBBLE_BASE_RADIUS;
       });
 
+      // 🔹 Make sure every node has a rectangular layout
+nodes.forEach(n => {
+  if (n.type === "note") {
+    // notes can be large; measure actual size
+    measureNoteLayout(n);
+  } else if (n.type === "book") {
+    // books have their own closed/open footprint
+    measureBookLayout(n);
+  } else {
+    // default size for non-note/non-book nodes
+    n.layoutWidth  = NODE_WIDTH;
+    n.layoutHeight = NODE_HEIGHT;
+  }
+});
+
+
       // Update bubble sizes/counts first
       updateBubbleRadiiAndCounts();
+
       // --- bubble-bubble repulsion ---
 for (let i = 0; i < bubbles.length; i++) {
   for (let j = i + 1; j < bubbles.length; j++) {
@@ -2145,32 +2699,82 @@ for (let i = 0; i < bubbles.length; i++) {
 }
 
 
-      // Node-node repulsion
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const a = nodes[i];
-          const b = nodes[j];
-          let dx = b.x - a.x;
-          let dy = b.y - a.y;
-          let dist = Math.hypot(dx, dy) || 0.001;
+            // 🔹 Node–node repulsion
+// - Note nodes: rectangular hitboxes (so big notes push properly)
+// - Regular nodes: original radial repulsion using BUBBLE_RADIUS/BUBBLE_FORCE
 
-          if (dist >= BUBBLE_RADIUS) continue;
+const NODE_MARGIN = 40;        // extra spacing between note rectangles
+const NODE_RECT_FORCE = 0.08;  // strength of the push for notes
 
-          const overlap = BUBBLE_RADIUS - dist;
-          const force = (overlap / BUBBLE_RADIUS) * BUBBLE_FORCE;
+for (let i = 0; i < nodes.length; i++) {
+  const a = nodes[i];
 
-          dx /= dist;
-          dy /= dist;
+  for (let j = i + 1; j < nodes.length; j++) {
+    const b = nodes[j];
 
-          const fx = dx * force;
-          const fy = dy * force;
+    const isNoteA = a.type === "note";
+    const isNoteB = b.type === "note";
 
-          a.vx -= fx;
-          a.vy -= fy;
-          b.vx += fx;
-          b.vy += fy;
-        }
+    // === CASE 1: at least one is a note → rectangular hitboxes ===
+    if (isNoteA || isNoteB) {
+      const aW = (a.layoutWidth  || NODE_WIDTH);
+      const aH = (a.layoutHeight || NODE_HEIGHT);
+      const bW = (b.layoutWidth  || NODE_WIDTH);
+      const bH = (b.layoutHeight || NODE_HEIGHT);
+
+      const aHalfW = aW / 2;
+      const aHalfH = aH / 2;
+      const bHalfW = bW / 2;
+      const bHalfH = bH / 2;
+
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+
+      const overlapX =
+        aHalfW + bHalfW + NODE_MARGIN - Math.abs(dx);
+      const overlapY =
+        aHalfH + bHalfH + NODE_MARGIN - Math.abs(dy);
+
+      if (overlapX <= 0 || overlapY <= 0) continue;
+
+      if (overlapX < overlapY) {
+        // Separate along X
+        const dirX = dx === 0 ? (Math.random() < 0.5 ? -1 : 1) : Math.sign(dx);
+        const fx = dirX * overlapX * NODE_RECT_FORCE;
+        a.vx -= fx;
+        b.vx += fx;
+      } else {
+        // Separate along Y
+        const dirY = dy === 0 ? (Math.random() < 0.5 ? -1 : 1) : Math.sign(dy);
+        const fy = dirY * overlapY * NODE_RECT_FORCE;
+        a.vy -= fy;
+        b.vy += fy;
       }
+    }
+
+    // === CASE 2: both are regular nodes → original radial repulsion ===
+    else {
+      let dx = b.x - a.x;
+      let dy = b.y - a.y;
+      let dist = Math.hypot(dx, dy) || 0.001;
+
+      if (dist >= BUBBLE_RADIUS) continue;
+
+      const falloff = (BUBBLE_RADIUS - dist) / BUBBLE_RADIUS;
+      const force = BUBBLE_FORCE * falloff;
+
+      dx /= dist;
+      dy /= dist;
+
+      a.vx -= dx * force;
+      a.vy -= dy * force;
+      b.vx += dx * force;
+      b.vy += dy * force;
+    }
+  }
+}
+
+
 
      // Edge springs – longer if nodes (esp. notes) are bigger
 const springPairs = {};
@@ -2267,18 +2871,7 @@ bubbles.forEach(b => {
       draw();
       requestAnimationFrame(physics);
     }
-function sidebarSearchHTML() {
-  return `
-    <div class="search-block">
-      <div class="field-group">
-        <label for="sidebar-search">Search characters</label>
-        <input id="sidebar-search" placeholder="Type a name...">
-      </div>
-      <div id="sidebar-search-results" class="search-results"></div>
-    </div>
-  `;
-}
-
+    
 function sidebarSearchHTML() {
   return `
     <div class="search-block">
@@ -2301,7 +2894,7 @@ function setupSidebarSearch() {
     resultsEl.innerHTML = "";
     if (!q) return;
 
-        const matches = nodes.filter(n => {
+            const matches = nodes.filter(n => {
       if (n.type === "character") {
         const name = (n.data.name || "").toLowerCase();
         return name.includes(q);
@@ -2320,6 +2913,14 @@ function setupSidebarSearch() {
         const content = (n.data.content || "").toLowerCase();
         return title.includes(q) || content.includes(q);
       }
+      if (n.type === "book") {
+        const title = (n.data.title || "").toLowerCase();
+        let pagesText = "";
+        if (Array.isArray(n.data.pages)) {
+          pagesText = n.data.pages.join(" ").toLowerCase();
+        }
+        return title.includes(q) || pagesText.includes(q);
+      }
       return false;
     });
 
@@ -2328,11 +2929,10 @@ function setupSidebarSearch() {
       const div = document.createElement("div");
       div.className = "search-result";
 
-      // What to show in the list
-      let displayName = "";
+            let displayName = "";
       let typeLabel = "";
 
-            if (n.type === "character") {
+      if (n.type === "character") {
         displayName = n.data.name || `Character #${n.id}`;
         typeLabel = "Character";
       } else if (n.type === "location") {
@@ -2344,7 +2944,11 @@ function setupSidebarSearch() {
       } else if (n.type === "note") {
         displayName = n.data.title || `Note #${n.id}`;
         typeLabel = "Note";
+      } else if (n.type === "book") {
+        displayName = n.data.title || `Book #${n.id}`;
+        typeLabel = "Book";
       }
+
 
 
       div.textContent = `${displayName} (${typeLabel})`;
@@ -2589,6 +3193,98 @@ function setupSidebarSearch() {
     setupSidebarSearch();
   }
 
+  // === BOOK SELECTED ===
+  else if (selectedNode.type === "book") {
+    const currPageIndex =
+      typeof selectedNode.data.currentPage === "number"
+        ? Math.min(Math.max(selectedNode.data.currentPage, 0), BOOK_MAX_PAGES - 1)
+        : 0;
+
+    sidebar.innerHTML = `
+      <div>
+        <div class="pill">Book</div>
+        <h2>${selectedNode.data.title || "Book"}</h2>
+
+        <div class="field-group">
+          <label for="book-title">Title</label>
+          <input id="book-title" value="${selectedNode.data.title || ""}">
+        </div>
+
+        <div class="field-group">
+          <label for="book-cover">Cover colour</label>
+          <select id="book-cover">
+            <option value="#1C1E4F"${selectedNode.data.coverColor === "#1C1E4F" ? " selected" : ""}>Indigo</option>
+            <option value="#601919"${selectedNode.data.coverColor === "#601919" ? " selected" : ""}>Red</option>
+            <option value="#36225A"${selectedNode.data.coverColor === "#36225A" ? " selected" : ""}>Purple</option>
+            <option value="#203F31"${selectedNode.data.coverColor === "#203F31" ? " selected" : ""}>Green</option>
+          </select>
+        </div>
+
+        <div class="field-group">
+          <label for="book-page">Page (1–${BOOK_MAX_PAGES})</label>
+          <input
+            id="book-page"
+            type="number"
+            min="1"
+            max="${BOOK_MAX_PAGES}"
+            value="${currPageIndex + 1}"
+          >
+        </div>
+
+        <div class="field-group">
+          <label for="book-page-content">Page text</label>
+          <textarea id="book-page-content">${
+            Array.isArray(selectedNode.data.pages)
+              ? (selectedNode.data.pages[currPageIndex] || "")
+              : ""
+          }</textarea>
+        </div>
+
+        <p style="font-size:11px;margin-top:4px;color:inherit;">
+          Tip: click the book in Edit mode to open/close the spread.
+        </p>
+      </div>
+      ${sidebarSearchHTML()}
+    `;
+
+    const titleInput = document.getElementById("book-title");
+    const coverSelect = document.getElementById("book-cover");
+    const pageInput = document.getElementById("book-page");
+    const textArea = document.getElementById("book-page-content");
+
+    if (!Array.isArray(selectedNode.data.pages)) {
+      selectedNode.data.pages = Array.from({ length: BOOK_MAX_PAGES }, () => "");
+    }
+
+    titleInput.addEventListener("input", e => {
+      selectedNode.data.title = e.target.value;
+    });
+
+    coverSelect.addEventListener("change", e => {
+      selectedNode.data.coverColor = e.target.value;
+    });
+
+    pageInput.addEventListener("input", e => {
+      let num = parseInt(e.target.value, 10);
+      if (Number.isNaN(num)) num = 1;
+      num = Math.min(Math.max(num, 1), BOOK_MAX_PAGES);
+      e.target.value = String(num);
+      const idx = num - 1;
+      selectedNode.data.currentPage = idx;
+      textArea.value = selectedNode.data.pages[idx] || "";
+    });
+
+    textArea.addEventListener("input", e => {
+      let num = parseInt(pageInput.value, 10);
+      if (Number.isNaN(num)) num = 1;
+      num = Math.min(Math.max(num, 1), BOOK_MAX_PAGES);
+      const idx = num - 1;
+      selectedNode.data.currentPage = idx;
+      selectedNode.data.pages[idx] = e.target.value;
+    });
+
+    setupSidebarSearch();
+  }
 
   // === NOTE SELECTED ===
   else {
@@ -2610,11 +3306,35 @@ function setupSidebarSearch() {
     `;
 
     document.getElementById("note-title").addEventListener("input", e => {
-      selectedNode.data.title = e.target.value;
-    });
-    document.getElementById("note-content").addEventListener("input", e => {
-      selectedNode.data.content = e.target.value;
-    });
+  let v = e.target.value;
+  if (v.length > NOTE_MAX_TITLE_CHARS) {
+    v = v.slice(0, NOTE_MAX_TITLE_CHARS);
+    e.target.value = v;          // keep the UI in sync
+  }
+  selectedNode.data.title = v;
+});
+
+document.getElementById("note-content").addEventListener("input", e => {
+  let v = e.target.value;
+  if (v.length > NOTE_MAX_CONTENT_CHARS) {
+    v = v.slice(0, NOTE_MAX_CONTENT_CHARS);
+    e.target.value = v;
+  }
+  selectedNode.data.content = v;
+});
+nodes.forEach(n => {
+  if (n.type === "note" && n.data) {
+    if (typeof n.data.title === "string") {
+      n.data.title = n.data.title.slice(0, NOTE_MAX_TITLE_CHARS);
+    }
+    if (typeof n.data.content === "string") {
+      n.data.content = n.data.content.slice(0, NOTE_MAX_CONTENT_CHARS);
+    }
+  }
+  if (typeof n.vx !== "number") n.vx = 0;
+  if (typeof n.vy !== "number") n.vy = 0;
+});
+
 
     setupSidebarSearch();
   }
@@ -2622,22 +3342,41 @@ function setupSidebarSearch() {
 
 
     // Mode buttons
-    const modeButtons = document.querySelectorAll(".mode-button[data-mode]");
-    modeButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        modeButtons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        currentMode = btn.getAttribute("data-mode");
-        if (currentMode !== MODES.CONNECT) {
-          connectSourceNode = null;
-        }
-        if (currentMode !== MODES.EDIT) {
-          selectedNode = null;
-          selectedBubble = null;
-          renderSidebar();
-        }
-      });
-    });
+const modeButtons = document.querySelectorAll(".mode-button[data-mode]");
+
+// Tooltip text for each tool
+const modeTooltips = {
+  move: "Drag nodes/bubbles and pan the canvas.",
+  connect: "Click two nodes to create a relationship.",
+  edit: "Select a node or bubble to edit its details.",
+  delete: "Delete nodes, bubbles, or connections you click.",
+  explode: "Trigger a shockwave that blasts everything away.",
+  duplicate: "Click to clone a node or bubble.",
+  autoconnect: "Connect this node to nearby nodes of the chosen relationship type.",
+  isolate: "Remove all connections to the clicked node.",
+};
+
+modeButtons.forEach(btn => {
+  const mode = btn.getAttribute("data-mode");
+  if (modeTooltips[mode]) {
+    btn.title = modeTooltips[mode];  // native hover tooltip
+  }
+
+  btn.addEventListener("click", () => {
+    modeButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentMode = mode;
+    if (currentMode !== MODES.CONNECT) {
+      connectSourceNode = null;
+    }
+    if (currentMode !== MODES.EDIT) {
+      selectedNode = null;
+      selectedBubble = null;
+      renderSidebar();
+    }
+  });
+});
+
 
     // Theme toggle (4 modes)
     const themeToggle = document.getElementById("themeToggle");
@@ -2915,20 +3654,27 @@ function setupSidebarSearch() {
         }
 
       } else if (currentMode === MODES.EDIT) {
-        if (node) {
-          selectedNode = node;
-          selectedBubble = null;
-        } else {
-          const bubble = getBubbleAtWorld(world.x, world.y);
-          if (bubble) {
-            selectedBubble = bubble;
-            selectedNode = null;
-          } else {
-            selectedNode = null;
-            selectedBubble = null;
-          }
-        }
-        renderSidebar();
+  if (node) {
+    // toggle collapsed/expanded when a note is clicked
+    if (node.type === "note") {
+      node.isExpanded = !node.isExpanded;
+    } else if (node.type === "book") {
+      node.isOpen = !node.isOpen;
+    }
+    selectedNode = node;
+    selectedBubble = null;
+  } else {
+    const bubble = getBubbleAtWorld(world.x, world.y);
+    if (bubble) {
+      selectedBubble = bubble;
+      selectedNode = null;
+    } else {
+      selectedNode = null;
+      selectedBubble = null;
+    }
+  }
+  renderSidebar();
+
 
       // 🔁 NEW: DUPLICATE MODE
       } else if (currentMode === MODES.DUPLICATE) {
@@ -2957,7 +3703,7 @@ function setupSidebarSearch() {
           }
         }
 
-      // 🌐 NEW: AUTO CONNECT MODE
+      // AUTO CONNECT MODE
       } else if (currentMode === MODES.AUTOCONNECT) {
         if (node) {
           const type = document.getElementById("connectionTypeSelect").value;
@@ -3013,6 +3759,17 @@ function setupSidebarSearch() {
 
       } else if (currentMode === MODES.EXPLODE) {
         triggerExplosion(world.x, world.y, e.clientX, e.clientY);
+
+      } else if (currentMode === MODES.ISOLATE) {
+        if (node) {
+          edges = edges.filter(
+            e => e.fromId !== node.id && e.toId !== node.id
+          );
+          normalizeEdges();
+          selectedNode = node;
+          selectedBubble = null;
+          renderSidebar();
+        }
 
       } else if (currentMode === MODES.DELETE) {
         const edgeIndex = getEdgeAtWorld(world.x, world.y);
